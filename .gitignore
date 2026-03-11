@@ -8,3 +8,4 @@ target/
 *.log
 *.tmp
 /.vscode
+.env

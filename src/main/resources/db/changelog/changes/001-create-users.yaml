@@ -1,37 +1,36 @@
 databaseChangeLog:
   - changeSet:
-      id: create-payment-cards
+      id: create-users
       author: Artsikhovich Aliaksandr
       changes:
         - createTable:
-            tableName: payment_cards
+            tableName: users
             columns:
               - column:
                   name: id
                   type: BIGSERIAL
                   constraints:
                     primaryKey: true
-                      nullable: false
+                    nullable: false
               - column:
-                  name: user_id
-                  type: BIGINT
+                  name: name
+                  type: VARCHAR(100)
                   constraints:
                     nullable: false
               - column:
-                  name: number
-                  type: VARCHAR(32)
+                  name: surname
+                  type: VARCHAR(100)
                   constraints:
                     nullable: false
               - column:
-                  name: holder
+                  name: birth_date
+                  type: DATE
+              - column:
+                  name: email
                   type: VARCHAR(255)
                   constraints:
                     nullable: false
-              - column:
-                  name: expiration_date
-                  type: DATE
-                  constraints:
-                    nullable: false
+                    unique: true
               - column:
                   name: active
                   type: BOOLEAN
@@ -43,24 +42,16 @@ databaseChangeLog:
               - column:
                   name: updated_at
                   type: TIMESTAMP
-                    defaultValueComputed: CURRENT_TIMESTAMP
-
-        - addForeignKeyConstraint:
-            baseTableName: payment_cards
-            baseColumnNames: user_id
-            referencedTableName: users
-            referencedColumnNames: id
-            constraintName: fk_payment_cards_user
-            onDelete: CASCADE
-
-        - createIndex:
-            tableName: payment_cards
-            indexName: idx_payment_cards_user_id
-            columns:
-              - column:
-                  name: user_id
+                  defaultValueComputed: CURRENT_TIMESTAMP
 
         - addUniqueConstraint:
-            tableName: payment_cards
-            columnNames: number
-            constraintName: uq_payment_cards_number
+            tableName: users
+            columnNames: email
+            constraintName: uq_users_email
+
+        - createIndex:
+            tableName: users
+            indexName: idx_users_surname
+            columns:
+              - column:
+                  name: surname

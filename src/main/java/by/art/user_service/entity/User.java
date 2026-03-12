@@ -8,9 +8,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -18,8 +17,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "users")
-@Data
-@NoArgsConstructor
+@Getter @Setter
 public class User extends Auditable {
 
   @Id
@@ -36,6 +34,6 @@ public class User extends Auditable {
 
   private boolean active = true;
 
-  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<PaymentCard> cards = new ArrayList<>();
 }

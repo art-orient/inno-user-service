@@ -28,7 +28,7 @@ public class PaymentCard extends Auditable {
   @JoinColumn(name = "user_id", nullable = false)
   private User user;
 
-  private String number;
+  private String cardNumber;
   private String holder;
   private LocalDate expirationDate;
   private boolean active = true;

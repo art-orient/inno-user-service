@@ -45,13 +45,13 @@ class PaymentCardServiceImplTest {
 
     card = new PaymentCard();
     card.setId(10L);
-    card.setCardNumber("1234-5678-9999-0000");
+    card.setNumber("1234-5678-9999-0000");
     card.setActive(true);
     card.setUser(user);
 
     cardDto = new PaymentCardDto();
     cardDto.setId(10L);
-    cardDto.setCardNumber("1234-5678-9999-0000");
+    cardDto.setNumber("1234-5678-9999-0000");
     cardDto.setActive(true);
     cardDto.setUserId(1L);
   }
@@ -64,7 +64,7 @@ class PaymentCardServiceImplTest {
     when(cardMapper.toDto(card)).thenReturn(cardDto);
     PaymentCardDto result = cardService.create(cardDto);
     assertNotNull(result);
-    assertEquals("1234-5678-9999-0000", result.getCardNumber());
+    assertEquals("1234-5678-9999-0000", result.getNumber());
     verify(cardRepository).save(card);
   }
 
@@ -79,7 +79,7 @@ class PaymentCardServiceImplTest {
     when(cardRepository.findById(10L)).thenReturn(Optional.of(card));
     when(cardMapper.toDto(card)).thenReturn(cardDto);
     PaymentCardDto result = cardService.update(10L, cardDto);
-    assertEquals("1234-5678-9999-0000", result.getCardNumber());
+    assertEquals("1234-5678-9999-0000", result.getNumber());
     verify(cardRepository).findById(10L);
   }
 
@@ -117,10 +117,11 @@ class PaymentCardServiceImplTest {
 
   @Test
   void getByUserId_success() {
+    when(userRepository.existsById(1L)).thenReturn(true);
     when(cardRepository.findByUserId(1L)).thenReturn(Collections.singletonList(card));
     when(cardMapper.toDto(card)).thenReturn(cardDto);
     var result = cardService.getByUserId(1L);
     assertEquals(1, result.size());
-    assertEquals("1234-5678-9999-0000", result.get(0).getCardNumber());
+    assertEquals("1234-5678-9999-0000", result.get(0).getNumber());
   }
 }

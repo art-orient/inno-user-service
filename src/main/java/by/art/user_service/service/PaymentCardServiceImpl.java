@@ -29,10 +29,11 @@ public class PaymentCardServiceImpl implements PaymentCardService{
   private final UserRepository userRepository;
   private final PaymentCardMapper cardMapper;
 
+  @Transactional
   @CacheEvict(value = "user", key = "#dto.userId")
   @Override
   public PaymentCardDto create(PaymentCardDto dto) {
-    User user = userRepository.findById(dto.getUserId())
+    User user = userRepository.findByIdForUpdate(dto.getUserId())
             .orElseThrow(() -> new UserServiceException(USER_NOT_FOUND));
     if (user.getCards().size() >= 5) {
       throw new UserServiceException(CARD_LIMIT_EXCEEDED);
@@ -75,7 +76,7 @@ public class PaymentCardServiceImpl implements PaymentCardService{
   public PaymentCardDto update(Long id, PaymentCardDto dto) {
     PaymentCard card = cardRepository.findById(id)
             .orElseThrow(() -> new UserServiceException(CARD_NOT_FOUND));
-    card.setCardNumber(dto.getCardNumber());
+    card.setNumber(dto.getNumber());
     card.setActive(dto.getActive());
     return cardMapper.toDto(card);
   }
@@ -96,5 +97,10 @@ public class PaymentCardServiceImpl implements PaymentCardService{
     PaymentCard card = cardRepository.findById(id)
             .orElseThrow(() -> new UserServiceException(CARD_NOT_FOUND));
     card.setActive(false);
+  }
+
+  @Override
+  public void delete(Long id) {
+    cardRepository.deleteById(id);
   }
 }

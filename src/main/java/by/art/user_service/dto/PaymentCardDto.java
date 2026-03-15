@@ -10,12 +10,12 @@ public class PaymentCardDto {
 
   private Long id;
 
-  @NotBlank
-  @Size(min = 16, max = 16)
+  @NotBlank(message = "Card number is required")
+  @Size(min = 16, max = 16, message = "Card number must be 16 digits")
   private String cardNumber;
 
   private Boolean active;
 
-  @NotNull
+  @NotNull(message = "User ID is required")
   private Long userId;
 }

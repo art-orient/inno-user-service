@@ -10,18 +10,6 @@ import org.springframework.data.jpa.domain.Specification;
 
 public class PaymentCardSpecification {
 
-  public static Specification<PaymentCard> hasCardNumber(String cardNumber) {
-    return (root, query, cb) ->
-            cardNumber == null ? null :
-                    cb.like(cb.lower(root.get("cardNumber")), "%" + cardNumber.toLowerCase() + "%");
-  }
-
-  public static Specification<PaymentCard> isActive(Boolean active) {
-    return (root, query, cb) ->
-            active == null ? null :
-                    cb.equal(root.get("active"), active);
-  }
-
   public static Specification<PaymentCard> hasUserName(String name) {
     return (Root<PaymentCard> root, CriteriaQuery<?> query, CriteriaBuilder cb) -> {
       if (name == null || name.isBlank()) {

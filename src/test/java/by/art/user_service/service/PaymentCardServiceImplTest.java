@@ -58,19 +58,19 @@ class PaymentCardServiceImplTest {
 
   @Test
   void create_success() {
-    when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-    when(cardMapper.toEntity(cardDto)).thenReturn(card);
-    when(cardRepository.save(card)).thenReturn(card);
-    when(cardMapper.toDto(card)).thenReturn(cardDto);
+    when(userRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(user));
+    when(cardMapper.toEntity(any(PaymentCardDto.class))).thenReturn(card);
+    when(cardRepository.save(any(PaymentCard.class))).thenReturn(card);
+    when(cardMapper.toDto(any(PaymentCard.class))).thenReturn(cardDto);
     PaymentCardDto result = cardService.create(cardDto);
     assertNotNull(result);
     assertEquals("1234-5678-9999-0000", result.getNumber());
-    verify(cardRepository).save(card);
+    verify(cardRepository).save(any(PaymentCard.class));
   }
 
   @Test
   void create_userNotFound() {
-    when(userRepository.findById(1L)).thenReturn(Optional.empty());
+    when(userRepository.findByIdForUpdate(1L)).thenReturn(Optional.empty());
     assertThrows(UserServiceException.class, () -> cardService.create(cardDto));
   }
 

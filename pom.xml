@@ -133,7 +133,22 @@
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<version>3.5.11</version>
 			</plugin>
+			<plugin>
+				<groupId>org.sonarsource.scanner.maven</groupId>
+				<artifactId>sonar-maven-plugin</artifactId>
+				<version>3.10.0.2594</version>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>3.2.5</version>
+			</plugin>
 		</plugins>
 	</build>
-
+	<repositories>
+		<repository>
+			<id>sonarsource</id>
+			<url>https://repox.sonarsource.com/repository/public/</url>
+		</repository>
+	</repositories>
 </project>

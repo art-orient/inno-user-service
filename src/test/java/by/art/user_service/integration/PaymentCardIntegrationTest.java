@@ -21,6 +21,7 @@ import java.time.LocalDate;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
@@ -75,6 +76,7 @@ class PaymentCardIntegrationTest extends TestcontainersConfig {
     mockMvc.perform(post("/cards")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(dto)))
+            .andDo(print())
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.id", notNullValue()))
             .andExpect(jsonPath("$.number", is("1234567899990000")));
@@ -86,6 +88,7 @@ class PaymentCardIntegrationTest extends TestcontainersConfig {
     createTestCard(user);
 
     mockMvc.perform(get("/cards/user/" + user.getId()))
+            .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath("$", hasSize(1)))
             .andExpect(jsonPath("$[0].number", is("1234567899990000")));
@@ -105,6 +108,7 @@ class PaymentCardIntegrationTest extends TestcontainersConfig {
     mockMvc.perform(put("/cards/" + card.getId())
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(updateDto)))
+            .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.number", is("9999888877776666")))
             .andExpect(jsonPath("$.active", is(false)));
@@ -129,6 +133,7 @@ class PaymentCardIntegrationTest extends TestcontainersConfig {
     PaymentCard card = createTestCard(user);
 
     mockMvc.perform(patch("/cards/" + card.getId() + "/deactivate"))
+            .andDo(print())
             .andExpect(status().isNoContent());
     PaymentCard updated = cardRepository.findById(card.getId()).orElseThrow();
     assert !updated.isActive();
@@ -139,6 +144,7 @@ class PaymentCardIntegrationTest extends TestcontainersConfig {
     User user = createTestUser();
     PaymentCard card = createTestCard(user);
     mockMvc.perform(delete("/cards/" + card.getId()))
+            .andDo(print())
             .andExpect(status().isNoContent());
     assert cardRepository.findById(card.getId()).isEmpty();
   }

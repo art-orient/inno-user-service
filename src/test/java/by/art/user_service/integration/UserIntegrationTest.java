@@ -18,6 +18,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
@@ -57,6 +58,7 @@ class UserIntegrationTest extends TestcontainersConfig {
     mockMvc.perform(post("/users")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(dto)))
+            .andDo(print())
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.id", notNullValue()))
             .andExpect(jsonPath("$.name", is("Alex")))
@@ -69,6 +71,7 @@ class UserIntegrationTest extends TestcontainersConfig {
     user = userRepository.save(user);
 
     mockMvc.perform(get("/users/" + user.getId()))
+            .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.id", is(user.getId().intValue())))
             .andExpect(jsonPath("$.email", is("orientirik@gmail.com")));
@@ -87,6 +90,7 @@ class UserIntegrationTest extends TestcontainersConfig {
     mockMvc.perform(put("/users/" + user.getId())
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(updateDto)))
+            .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.name", is("Updated")))
             .andExpect(jsonPath("$.active", is(false)));
@@ -98,6 +102,7 @@ class UserIntegrationTest extends TestcontainersConfig {
     user = userRepository.save(user);
 
     mockMvc.perform(delete("/users/" + user.getId()))
+            .andDo(print())
             .andExpect(status().isNoContent());
     assertFalse(userRepository.findById(user.getId()).isPresent());
   }

@@ -160,6 +160,20 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>3.2.5</version>
 			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>3.2.5</version>
+				<configuration>
+					<redirectTestOutputToFile>false</redirectTestOutputToFile>
+					<forkNode>false</forkNode>
+					<useSystemClassLoader>false</useSystemClassLoader>
+					<printSummary>true</printSummary>
+					<trimStackTrace>false</trimStackTrace>
+					<systemOut>true</systemOut>
+					<systemErr>true</systemErr>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 </project>

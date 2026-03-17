@@ -1,6 +1,6 @@
 package by.art.user_service.integration;
 
-import by.art.user_service.TestContainersConfig;
+import by.art.user_service.config.TestcontainersConfig;
 import by.art.user_service.dto.UserDto;
 import by.art.user_service.entity.User;
 import by.art.user_service.repository.UserRepository;
@@ -13,6 +13,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -21,8 +22,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@Testcontainers
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-class UserIntegrationTest extends TestContainersConfig {
+class UserIntegrationTest extends TestcontainersConfig {
   @Autowired
   private MockMvc mockMvc;
   @Autowired

@@ -1,6 +1,6 @@
 package by.art.user_service.integration;
 
-import by.art.user_service.TestContainersConfig;
+import by.art.user_service.config.TestcontainersConfig;
 import by.art.user_service.dto.PaymentCardDto;
 import by.art.user_service.entity.PaymentCard;
 import by.art.user_service.entity.User;
@@ -15,6 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.LocalDate;
 
@@ -24,8 +25,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@Testcontainers
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-class PaymentCardIntegrationTest extends TestContainersConfig {
+class PaymentCardIntegrationTest extends TestcontainersConfig {
   @Autowired
   private MockMvc mockMvc;
   @Autowired

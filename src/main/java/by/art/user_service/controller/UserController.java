@@ -55,12 +55,6 @@ public class UserController {
     return ResponseEntity.noContent().build();
   }
 
-  @PatchMapping("/{id}/deactivate")
-  public ResponseEntity<Void> deactivate(@PathVariable Long id) {
-    userService.deactivate(id);
-    return ResponseEntity.noContent().build();
-  }
-
   @DeleteMapping("/{id}")
   public ResponseEntity<Void> delete(@PathVariable Long id) {
     userService.delete(id);

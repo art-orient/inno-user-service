@@ -25,6 +25,7 @@ import org.testcontainers.utility.DockerImageName;
 import java.time.LocalDate;
 
 import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -104,7 +105,6 @@ class PaymentCardIntegrationTest {
     mockMvc.perform(post("/cards")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(dto)))
-            .andDo(print())
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.id", notNullValue()))
             .andExpect(jsonPath("$.number", is("1234567899990000")));
@@ -116,7 +116,6 @@ class PaymentCardIntegrationTest {
     createTestCard(user);
 
     mockMvc.perform(get("/cards/user/" + user.getId()))
-            .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath("$", hasSize(1)))
             .andExpect(jsonPath("$[0].number", is("1234567899990000")));
@@ -136,7 +135,6 @@ class PaymentCardIntegrationTest {
     mockMvc.perform(put("/cards/" + card.getId())
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(updateDto)))
-            .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.number", is("9999888877776666")))
             .andExpect(jsonPath("$.active", is(false)));
@@ -156,24 +154,18 @@ class PaymentCardIntegrationTest {
   }
 
   @Test
-  void deactivateCard_success() throws Exception {
+  void deleteCard_softDelete_success() throws Exception {
     User user = createTestUser();
+    user = userRepository.save(user);
     PaymentCard card = createTestCard(user);
-
-    mockMvc.perform(patch("/cards/" + card.getId() + "/deactivate"))
-            .andDo(print())
-            .andExpect(status().isNoContent());
-    PaymentCard updated = cardRepository.findById(card.getId()).orElseThrow();
-    assert !updated.isActive();
-  }
-
-  @Test
-  void deleteCard_success() throws Exception {
-    User user = createTestUser();
-    PaymentCard card = createTestCard(user);
+    card = cardRepository.save(card);
     mockMvc.perform(delete("/cards/" + card.getId()))
             .andDo(print())
             .andExpect(status().isNoContent());
-    assert cardRepository.findById(card.getId()).isEmpty();
+    PaymentCard deletedCard = cardRepository.findById(card.getId())
+            .orElseThrow(() -> new AssertionError("Card must still exist in DB"));
+    assertFalse(deletedCard.isActive(), "Card must be soft-deleted (active=false)");
+    mockMvc.perform(get("/cards/" + card.getId()))
+            .andExpect(status().isNotFound());
   }
 }

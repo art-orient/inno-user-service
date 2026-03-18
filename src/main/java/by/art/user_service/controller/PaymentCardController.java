@@ -63,12 +63,6 @@ public class PaymentCardController {
     return ResponseEntity.noContent().build();
   }
 
-  @PatchMapping("/{id}/deactivate")
-  public ResponseEntity<Void> deactivate(@PathVariable Long id) {
-    cardService.deactivate(id);
-    return ResponseEntity.noContent().build();
-  }
-
   @DeleteMapping("/{id}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   public void delete(@PathVariable Long id) {

@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.LocalDateTime;
 
+import static by.art.user_service.service.PaymentCardServiceImpl.CARD_NOT_FOUND;
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
   private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
@@ -17,12 +19,11 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(UserServiceException.class)
   public ResponseEntity<ErrorResponse> handleUserServiceException(UserServiceException ex) {
     ErrorResponse response = new ErrorResponse(ex.getMessage(), LocalDateTime.now());
-    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
   }
 
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ErrorResponse> handleGeneral(Exception ex) {
-    ex.printStackTrace();
     log.error("Unhandled exception", ex);
     ErrorResponse response = new ErrorResponse("Internal server error - " + ex.getMessage(),
             LocalDateTime.now());

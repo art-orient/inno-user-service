@@ -36,13 +36,21 @@ public class UserServiceImpl implements UserService {
   public UserDto getById(Long id) {
     User user = userRepository.findById(id)
             .orElseThrow(() -> new UserServiceException(USER_NOT_FOUND));
+    if (!user.isActive()) {
+      throw new UserServiceException(USER_NOT_FOUND);
+    }
     return userMapper.toDto(user);
   }
 
   @Override
   public Page<UserDto> getAll(String name, String surname, Pageable pageable) {
-    Specification<User> spec = UserSpecification.hasName(name)
-            .and(UserSpecification.hasSurname(surname));
+    Specification<User> spec = (root, query, cb) -> cb.isTrue(root.get("active"));
+    if (name != null) {
+      spec = spec.and(UserSpecification.hasName(name));
+    }
+    if (surname != null) {
+      spec = spec.and(UserSpecification.hasSurname(surname));
+    }
     return userRepository.findAll(spec, pageable)
             .map(userMapper::toDto);
   }
@@ -73,18 +81,9 @@ public class UserServiceImpl implements UserService {
   @CacheEvict(value = "user", key = "#id")
   @Override
   @Transactional
-  public void deactivate(Long id) {
-    User user = userRepository.findById(id)
-            .orElseThrow(() -> new UserServiceException(USER_NOT_FOUND));
-    user.setActive(false);
-  }
-
-  @CacheEvict(value = "user", key = "#id")
-  @Override
-  @Transactional
   public void delete(Long id) {
     User user = userRepository.findById(id)
             .orElseThrow(() -> new UserServiceException(USER_NOT_FOUND));
-    userRepository.delete(user);
+    user.setActive(false);
   }
 }

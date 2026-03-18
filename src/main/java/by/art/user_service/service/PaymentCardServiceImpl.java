@@ -48,6 +48,9 @@ public class PaymentCardServiceImpl implements PaymentCardService{
   public PaymentCardDto getById(Long id) {
     PaymentCard card = cardRepository.findById(id)
             .orElseThrow(() -> new UserServiceException(CARD_NOT_FOUND));
+    if (!card.isActive()) {
+      throw new UserServiceException(CARD_NOT_FOUND);
+    }
     return cardMapper.toDto(card);
   }
 
@@ -93,14 +96,9 @@ public class PaymentCardServiceImpl implements PaymentCardService{
   @CacheEvict(value = "user", key = "#id")
   @Override
   @Transactional
-  public void deactivate(Long id) {
+  public void delete(Long id) {
     PaymentCard card = cardRepository.findById(id)
             .orElseThrow(() -> new UserServiceException(CARD_NOT_FOUND));
     card.setActive(false);
-  }
-
-  @Override
-  public void delete(Long id) {
-    cardRepository.deleteById(id);
   }
 }

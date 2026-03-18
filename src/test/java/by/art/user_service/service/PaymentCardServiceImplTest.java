@@ -103,19 +103,6 @@ class PaymentCardServiceImplTest {
   }
 
   @Test
-  void deactivate_success() {
-    when(cardRepository.findById(10L)).thenReturn(Optional.of(card));
-    cardService.deactivate(10L);
-    assertFalse(card.isActive());
-  }
-
-  @Test
-  void deactivate_cardNotFound() {
-    when(cardRepository.findById(10L)).thenReturn(Optional.empty());
-    assertThrows(UserServiceException.class, () -> cardService.deactivate(10L));
-  }
-
-  @Test
   void getByUserId_success() {
     when(userRepository.existsById(1L)).thenReturn(true);
     when(cardRepository.findByUserId(1L)).thenReturn(Collections.singletonList(card));

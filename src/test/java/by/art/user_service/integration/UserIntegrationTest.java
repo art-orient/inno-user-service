@@ -86,7 +86,6 @@ class UserIntegrationTest {
     mockMvc.perform(post("/users")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(dto)))
-            .andDo(print())
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.id", notNullValue()))
             .andExpect(jsonPath("$.name", is("Alex")))
@@ -99,7 +98,6 @@ class UserIntegrationTest {
     user = userRepository.save(user);
 
     mockMvc.perform(get("/users/" + user.getId()))
-            .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.id", is(user.getId().intValue())))
             .andExpect(jsonPath("$.email", is("orientirik@gmail.com")));
@@ -118,20 +116,21 @@ class UserIntegrationTest {
     mockMvc.perform(put("/users/" + user.getId())
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(updateDto)))
-            .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.name", is("Updated")))
             .andExpect(jsonPath("$.active", is(false)));
   }
 
   @Test
-  void deleteUser_success() throws Exception {
+  void deleteUser_softDelete_success() throws Exception {
     User user = createTestUser();
     user = userRepository.save(user);
-
     mockMvc.perform(delete("/users/" + user.getId()))
-            .andDo(print())
             .andExpect(status().isNoContent());
-    assertFalse(userRepository.findById(user.getId()).isPresent());
+    User deletedUser = userRepository.findById(user.getId())
+            .orElseThrow(() -> new AssertionError("User must still exist in DB"));
+    assertFalse(deletedUser.isActive(), "User must be soft-deleted (active=false)");
+    mockMvc.perform(get("/users/" + user.getId()))
+            .andExpect(status().isNotFound());
   }
 }

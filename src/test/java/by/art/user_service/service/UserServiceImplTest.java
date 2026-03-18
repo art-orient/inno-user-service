@@ -78,9 +78,12 @@ class UserServiceImplTest {
 
   @Test
   void delete_success() {
+    User user = new User();
+    user.setActive(true);
     when(userRepository.findById(1L)).thenReturn(Optional.of(user));
     userService.delete(1L);
-    verify(userRepository).delete(user);
+    assertFalse(user.isActive(), "User must be soft-deleted (active=false)");
+    verify(userRepository, never()).delete(any(User.class));
   }
 
   @Test
@@ -100,18 +103,5 @@ class UserServiceImplTest {
   void activate_userNotFound() {
     when(userRepository.findById(1L)).thenReturn(Optional.empty());
     assertThrows(UserServiceException.class, () -> userService.activate(1L));
-  }
-
-  @Test
-  void deactivate_success() {
-    when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-    userService.deactivate(1L);
-    assertFalse(user.isActive());
-  }
-
-  @Test
-  void deactivate_userNotFound() {
-    when(userRepository.findById(1L)).thenReturn(Optional.empty());
-    assertThrows(UserServiceException.class, () -> userService.deactivate(1L));
   }
 }

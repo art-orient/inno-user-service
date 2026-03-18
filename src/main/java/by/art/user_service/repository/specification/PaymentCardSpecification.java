@@ -9,6 +9,8 @@ import jakarta.persistence.criteria.Root;
 import org.springframework.data.jpa.domain.Specification;
 
 public class PaymentCardSpecification {
+  private PaymentCardSpecification() {
+  }
 
   public static Specification<PaymentCard> hasUserName(String name) {
     return (Root<PaymentCard> root, CriteriaQuery<?> query, CriteriaBuilder cb) -> {

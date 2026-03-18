@@ -78,11 +78,11 @@ class UserServiceImplTest {
 
   @Test
   void delete_success() {
-    User user = new User();
-    user.setActive(true);
-    when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+    User existingUser = new User();
+    existingUser.setActive(true);
+    when(userRepository.findById(1L)).thenReturn(Optional.of(existingUser));
     userService.delete(1L);
-    assertFalse(user.isActive(), "User must be soft-deleted (active=false)");
+    assertFalse(existingUser.isActive(), "User must be soft-deleted (active=false)");
     verify(userRepository, never()).delete(any(User.class));
   }
 

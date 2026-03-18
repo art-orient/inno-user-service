@@ -105,7 +105,7 @@ class PaymentCardServiceImplTest {
   @Test
   void getByUserId_success() {
     when(userRepository.existsById(1L)).thenReturn(true);
-    when(cardRepository.findByUserId(1L)).thenReturn(Collections.singletonList(card));
+    when(cardRepository.findAllByUserIdAndActiveTrue(1L)).thenReturn(Collections.singletonList(card));
     when(cardMapper.toDto(card)).thenReturn(cardDto);
     var result = cardService.getByUserId(1L);
     assertEquals(1, result.size());

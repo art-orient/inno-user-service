@@ -67,7 +67,7 @@ public class PaymentCardServiceImpl implements PaymentCardService{
     if (!userRepository.existsById(userId)) {
       throw new UserServiceException(USER_NOT_FOUND);
     }
-    return cardRepository.findByUserId(userId)
+    return cardRepository.findAllByUserIdAndActiveTrue(userId)
             .stream()
             .map(cardMapper::toDto)
             .toList();

@@ -1,6 +1,5 @@
 package by.art.user_service.integration;
 
-import by.art.user_service.config.TestcontainersConfig;
 import by.art.user_service.dto.PaymentCardDto;
 import by.art.user_service.entity.PaymentCard;
 import by.art.user_service.entity.User;
@@ -13,9 +12,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
 
 import java.time.LocalDate;
 
@@ -27,8 +32,31 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @Testcontainers
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-class PaymentCardIntegrationTest extends TestcontainersConfig {
+@ActiveProfiles("test")
+class PaymentCardIntegrationTest {
+
+  @Container
+  static final PostgreSQLContainer<?> postgres =
+          new PostgreSQLContainer<>(DockerImageName.parse("postgres:15"))
+                  .withDatabaseName("testdb")
+                  .withUsername("test")
+                  .withPassword("test");
+
+  @Container
+  static final GenericContainer<?> redis =
+          new GenericContainer<>(DockerImageName.parse("redis:7.2"))
+                  .withExposedPorts(6379);
+
+  @DynamicPropertySource
+  static void registerProperties(DynamicPropertyRegistry registry) {
+    registry.add("spring.datasource.url", postgres::getJdbcUrl);
+    registry.add("spring.datasource.username", postgres::getUsername);
+    registry.add("spring.datasource.password", postgres::getPassword);
+
+    registry.add("spring.data.redis.host", redis::getHost);
+    registry.add("spring.data.redis.port", () -> redis.getMappedPort(6379));
+  }
+
   @Autowired
   private MockMvc mockMvc;
   @Autowired

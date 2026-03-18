@@ -13,9 +13,5 @@ spring:
         format_sql: true
     show-sql: true
 
-  redis:
-    host: ""
-    port: 0
-
   liquibase:
     enabled: true

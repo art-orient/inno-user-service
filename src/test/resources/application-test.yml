@@ -14,16 +14,3 @@ server:
     include-message: always
     include-binding-errors: always
     include-stacktrace: always
-
-spring:
-  cache:
-    type: none
-  redis:
-    host: ""
-    port: 0
-    url: ""
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.autoconfigure.cache.CacheAutoConfiguration
-      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
-      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration

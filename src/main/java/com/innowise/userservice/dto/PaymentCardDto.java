@@ -2,7 +2,7 @@ package com.innowise.userservice.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -14,7 +14,10 @@ public class PaymentCardDto implements Serializable {
   private Long id;
 
   @NotBlank(message = "Card number is required")
-  @Size(min = 16, max = 16, message = "Card number must be 16 digits")
+  @Pattern(
+          regexp = "^(?:\\d[ -]?){15}\\d$",
+          message = "Card number must contain 16 digits and may include spaces or dashes"
+  )
   private String number;
 
   private Boolean active;

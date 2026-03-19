@@ -63,24 +63,24 @@ class UserServiceImplTest {
 
   @Test
   void getById_success() {
-    when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+    when(userRepository.findUserWithCardsById(1L)).thenReturn(Optional.of(user));
     when(userMapper.toDto(user)).thenReturn(userDto);
     UserDto result = userService.getById(1L);
     assertNotNull(result);
     assertEquals("Alex", result.getName());
-    verify(userRepository).findById(1L);
+    verify(userRepository).findUserWithCardsById(1L);
   }
 
   @Test
   void getById_userNotFound() {
-    when(userRepository.findById(1L)).thenReturn(Optional.empty());
+    when(userRepository.findUserWithCardsById(1L)).thenReturn(Optional.empty());
     assertThrows(UserServiceException.class, () -> userService.getById(1L));
   }
 
   @Test
   void getById_inactiveUser() {
     user.setActive(false);
-    when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+    when(userRepository.findUserWithCardsById(1L)).thenReturn(Optional.of(user));
     assertThrows(UserServiceException.class, () -> userService.getById(1L));
   }
 

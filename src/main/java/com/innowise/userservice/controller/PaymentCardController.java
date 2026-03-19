@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/cards")
+@RequestMapping("/payment-cards")
 @RequiredArgsConstructor
 public class PaymentCardController {
   private final PaymentCardService cardService;
@@ -47,7 +47,7 @@ public class PaymentCardController {
     return ResponseEntity.ok(cardService.getAll(name, surname, pageable));
   }
 
-  @GetMapping("/user/{userId}")
+  @GetMapping("/users/{userId}/payment-cards")
   public ResponseEntity<List<PaymentCardDto>> getByUserId(@PathVariable Long userId) {
     return ResponseEntity.ok(cardService.getByUserId(userId));
   }
@@ -65,7 +65,8 @@ public class PaymentCardController {
 
   @DeleteMapping("/{id}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  public void delete(@PathVariable Long id) {
+  public ResponseEntity<Void> delete(@PathVariable Long id) {
     cardService.delete(id);
+    return ResponseEntity.noContent().build();
   }
 }

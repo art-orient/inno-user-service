@@ -1,6 +1,7 @@
 package com.innowise.userservice.service;
 
 import com.innowise.userservice.dto.PaymentCardDto;
+import com.innowise.userservice.entity.PaymentCard;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -17,7 +18,7 @@ public interface PaymentCardService {
 
   PaymentCardDto update(Long id, PaymentCardDto dto);
 
-  void activate(Long id);
+  PaymentCard activate(Long id);
 
-  void delete(Long id);
+  PaymentCard delete(Long id);
 }

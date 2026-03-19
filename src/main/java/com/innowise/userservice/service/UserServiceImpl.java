@@ -24,6 +24,7 @@ public class UserServiceImpl implements UserService {
   private final UserMapper userMapper;
 
   @Override
+  @Transactional
   public UserDto create(UserDto userDto) {
     User user = userMapper.toEntity(userDto);
     User userFromDb = userRepository.save(user);
@@ -34,7 +35,7 @@ public class UserServiceImpl implements UserService {
   @Cacheable(value = "user", key = "#id")
   @Override
   public UserDto getById(Long id) {
-    User user = userRepository.findById(id)
+    User user = userRepository.findUserWithCardsById(id)
             .orElseThrow(() -> new UserServiceException(USER_NOT_FOUND));
     if (!user.isActive()) {
       throw new UserServiceException(USER_NOT_FOUND);

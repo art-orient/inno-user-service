@@ -102,7 +102,7 @@ class PaymentCardIntegrationTest {
     dto.setHolder("Alex Artsikhovich");
     dto.setExpirationDate(LocalDate.of(2030, 12, 31));
 
-    mockMvc.perform(post("/cards")
+    mockMvc.perform(post("/payment-cards")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(dto)))
             .andExpect(status().isCreated())
@@ -115,7 +115,7 @@ class PaymentCardIntegrationTest {
     User user = createTestUser();
     createTestCard(user);
 
-    mockMvc.perform(get("/cards/user/" + user.getId()))
+    mockMvc.perform(get("/payment-cards/users/" + user.getId() + "/payment-cards"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$", hasSize(1)))
             .andExpect(jsonPath("$[0].number", is("1234567899990000")));
@@ -132,7 +132,7 @@ class PaymentCardIntegrationTest {
     updateDto.setHolder("Alex Artsikhovich");
     updateDto.setExpirationDate(LocalDate.of(2030, 12, 31));
 
-    mockMvc.perform(put("/cards/" + card.getId())
+    mockMvc.perform(put("/payment-cards/" + card.getId())
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(updateDto)))
             .andExpect(status().isOk())
@@ -147,7 +147,7 @@ class PaymentCardIntegrationTest {
     card.setActive(false);
     cardRepository.save(card);
 
-    mockMvc.perform(patch("/cards/" + card.getId() + "/status"))
+    mockMvc.perform(patch("/payment-cards/" + card.getId() + "/status"))
             .andExpect(status().isNoContent());
     PaymentCard updated = cardRepository.findById(card.getId()).orElseThrow();
     assert updated.isActive();
@@ -159,13 +159,13 @@ class PaymentCardIntegrationTest {
     user = userRepository.save(user);
     PaymentCard card = createTestCard(user);
     card = cardRepository.save(card);
-    mockMvc.perform(delete("/cards/" + card.getId()))
+    mockMvc.perform(delete("/payment-cards/" + card.getId()))
             .andDo(print())
             .andExpect(status().isNoContent());
     PaymentCard deletedCard = cardRepository.findById(card.getId())
             .orElseThrow(() -> new AssertionError("Card must still exist in DB"));
     assertFalse(deletedCard.isActive(), "Card must be soft-deleted (active=false)");
-    mockMvc.perform(get("/cards/" + card.getId()))
+    mockMvc.perform(get("/payment-cards/" + card.getId()))
             .andExpect(status().isNotFound());
   }
 }

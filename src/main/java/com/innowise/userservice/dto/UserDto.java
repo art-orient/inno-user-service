@@ -7,6 +7,7 @@ import lombok.Data;
 
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 public class UserDto implements Serializable {
@@ -27,4 +28,6 @@ public class UserDto implements Serializable {
 
   @Past(message = "Birth date must be in the past")
   private LocalDate birthDate;
+
+  private List<PaymentCardDto> cards;
 }

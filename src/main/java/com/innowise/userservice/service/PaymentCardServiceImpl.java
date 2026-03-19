@@ -74,7 +74,7 @@ public class PaymentCardServiceImpl implements PaymentCardService{
             .toList();
   }
 
-  @CacheEvict(value = "user", key = "#id")
+  @CacheEvict(value = "user", key = "#dto.userId")
   @Override
   @Transactional
   public PaymentCardDto update(Long id, PaymentCardDto dto) {
@@ -87,21 +87,23 @@ public class PaymentCardServiceImpl implements PaymentCardService{
     return cardMapper.toDto(card);
   }
 
-  @CacheEvict(value = "user", key = "#id")
+  @CacheEvict(value = "user", key = "#result.user.id")
   @Override
   @Transactional
-  public void activate(Long id) {
+  public PaymentCard activate(Long id) {
     PaymentCard card = cardRepository.findById(id)
             .orElseThrow(() -> new UserServiceException(CARD_NOT_FOUND));
     card.setActive(true);
+    return card;
   }
 
-  @CacheEvict(value = "user", key = "#id")
+  @CacheEvict(value = "user", key = "#result.user.id")
   @Override
   @Transactional
-  public void delete(Long id) {
+  public PaymentCard delete(Long id) {
     PaymentCard card = cardRepository.findById(id)
             .orElseThrow(() -> new UserServiceException(CARD_NOT_FOUND));
     card.setActive(false);
+    return card;
   }
 }

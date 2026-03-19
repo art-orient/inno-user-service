@@ -11,6 +11,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+
+import java.time.LocalDate;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -45,6 +50,18 @@ class UserServiceImplTest {
   }
 
   @Test
+  void create_success() {
+    when(userMapper.toEntity(userDto)).thenReturn(user);
+    when(userRepository.save(user)).thenReturn(user);
+    when(userMapper.toDto(user)).thenReturn(userDto);
+    UserDto result = userService.create(userDto);
+    assertNotNull(result);
+    verify(userMapper).toEntity(userDto);
+    verify(userRepository).save(user);
+    verify(userMapper).toDto(user);
+  }
+
+  @Test
   void getById_success() {
     when(userRepository.findById(1L)).thenReturn(Optional.of(user));
     when(userMapper.toDto(user)).thenReturn(userDto);
@@ -61,12 +78,49 @@ class UserServiceImplTest {
   }
 
   @Test
+  void getById_inactiveUser() {
+    user.setActive(false);
+    when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+    assertThrows(UserServiceException.class, () -> userService.getById(1L));
+  }
+
+  @Test
+  void getAll_withoutFilters() {
+    Pageable pageable = mock(Pageable.class);
+    Page<User> page = Page.empty();
+    when(userRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
+    Page<UserDto> result = userService.getAll(null, null, pageable);
+    assertNotNull(result);
+    verify(userRepository).findAll(any(Specification.class), eq(pageable));
+  }
+
+  @Test
+  void getAll_withFilters() {
+    Pageable pageable = mock(Pageable.class);
+    Page<User> page = Page.empty();
+    when(userRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
+    Page<UserDto> result = userService.getAll("Alex", "Artsikhovich", pageable);
+    assertNotNull(result);
+    verify(userRepository).findAll(any(Specification.class), eq(pageable));
+  }
+
+  @Test
   void update_success() {
     when(userRepository.findById(1L)).thenReturn(Optional.of(user));
     when(userMapper.toDto(user)).thenReturn(userDto);
     UserDto result = userService.update(1L, userDto);
     assertEquals("Alex", result.getName());
     assertEquals("Artsikhovich", result.getSurname());
+    verify(userRepository).findById(1L);
+  }
+
+  @Test
+  void update_withBirthDate() {
+    userDto.setBirthDate(LocalDate.of(1990, 1, 1));
+    when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+    when(userMapper.toDto(user)).thenReturn(userDto);
+    UserDto result = userService.update(1L, userDto);
+    assertEquals(LocalDate.of(1990, 1, 1), user.getBirthDate());
     verify(userRepository).findById(1L);
   }
 

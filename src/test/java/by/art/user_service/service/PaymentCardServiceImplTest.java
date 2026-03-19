@@ -13,6 +13,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.util.Collections;
 import java.util.Optional;
@@ -75,6 +78,45 @@ class PaymentCardServiceImplTest {
   }
 
   @Test
+  void create_cardLimitExceeded() {
+    user.setCards(Collections.nCopies(5, new PaymentCard())); // имитируем 5 карт
+    when(userRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(user));
+    assertThrows(UserServiceException.class, () -> cardService.create(cardDto));
+  }
+
+  @Test
+  void getById_success() {
+    when(cardRepository.findById(10L)).thenReturn(Optional.of(card));
+    when(cardMapper.toDto(card)).thenReturn(cardDto);
+    PaymentCardDto result = cardService.getById(10L);
+    assertNotNull(result);
+    assertEquals("1234-5678-9999-0000", result.getNumber());
+  }
+
+  @Test
+  void getById_cardNotFound() {
+    when(cardRepository.findById(10L)).thenReturn(Optional.empty());
+    assertThrows(UserServiceException.class, () -> cardService.getById(10L));
+  }
+
+  @Test
+  void getById_inactiveCard() {
+    card.setActive(false);
+    when(cardRepository.findById(10L)).thenReturn(Optional.of(card));
+    assertThrows(UserServiceException.class, () -> cardService.getById(10L));
+  }
+
+  @Test
+  void getAll_success() {
+    Pageable pageable = mock(Pageable.class);
+    Page<PaymentCard> page = Page.empty();
+    when(cardRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
+    Page<PaymentCardDto> result = cardService.getAll("Alex", "Artsikhovich", pageable);
+    assertNotNull(result);
+    verify(cardRepository).findAll(any(Specification.class), eq(pageable));
+  }
+
+  @Test
   void update_success() {
     when(cardRepository.findById(10L)).thenReturn(Optional.of(card));
     when(cardMapper.toDto(card)).thenReturn(cardDto);
@@ -110,5 +152,11 @@ class PaymentCardServiceImplTest {
     var result = cardService.getByUserId(1L);
     assertEquals(1, result.size());
     assertEquals("1234-5678-9999-0000", result.get(0).getNumber());
+  }
+
+  @Test
+  void getByUserId_userNotFound() {
+    when(userRepository.existsById(1L)).thenReturn(false);
+    assertThrows(UserServiceException.class, () -> cardService.getByUserId(1L));
   }
 }

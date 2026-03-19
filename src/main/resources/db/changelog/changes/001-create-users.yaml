@@ -55,3 +55,10 @@ databaseChangeLog:
             columns:
               - column:
                   name: surname
+
+        - createIndex:
+            tableName: users
+            indexName: idx_users_name
+            columns:
+              - column:
+                  name: name

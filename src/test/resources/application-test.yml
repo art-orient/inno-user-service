@@ -1,0 +1,16 @@
+logging:
+  level:
+    root: ERROR
+    org.springframework.web: DEBUG
+    org.springframework.boot.autoconfigure.web: DEBUG
+    org.springframework.boot.web.servlet.error: DEBUG
+    org.springframework.web.servlet.mvc.method.annotation: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql: TRACE
+    by.art: DEBUG
+
+server:
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: always

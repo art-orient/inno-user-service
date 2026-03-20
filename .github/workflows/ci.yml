@@ -31,11 +31,15 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-m2
 
-      # 4. Build + Test
+      # 4. Ensure Docker daemon is running (fix for 10.1)
+      - name: Ensure Docker is running
+        run: docker info
+
+      # 5. Build + Test (includes integration tests)
       - name: Build and Test
         run: mvn -B clean verify
 
-      # 5. SonarQube Analysis
+      # 6. SonarQube Analysis
       - name: SonarQube Scan
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -46,11 +50,11 @@ jobs:
             -Dsonar.host.url=https://sonarcloud.io \
             -Dsonar.login=$SONAR_TOKEN
 
-      # 6. Build Docker Image
+      # 7. Build Docker Image
       - name: Build Docker image
         run: docker build -t user_service_app .
 
-      # 7. Save Docker image as artifact (optional)
+      # 8. Save Docker image as artifact (optional)
       - name: Save Docker image
         run: docker save user_service_app | gzip > user_service_app.tar.gz
 

@@ -159,4 +159,18 @@ class PaymentCardServiceImplTest {
     when(userRepository.existsById(1L)).thenReturn(false);
     assertThrows(UserServiceException.class, () -> cardService.getByUserId(1L));
   }
+
+  @Test
+  void delete_success() {
+    when(cardRepository.findById(10L)).thenReturn(Optional.of(card));
+    PaymentCard result = cardService.delete(10L);
+    assertFalse(result.isActive());
+    verify(cardRepository).findById(10L);
+  }
+
+  @Test
+  void delete_cardNotFound() {
+    when(cardRepository.findById(10L)).thenReturn(Optional.empty());
+    assertThrows(UserServiceException.class, () -> cardService.delete(10L));
+  }
 }

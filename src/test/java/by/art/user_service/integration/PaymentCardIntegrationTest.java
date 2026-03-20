@@ -7,12 +7,16 @@ import by.art.user_service.entity.User;
 import by.art.user_service.repository.PaymentCardRepository;
 import by.art.user_service.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.time.LocalDate;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -20,6 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class PaymentCardIntegrationTest extends TestContainersConfig {
   @Autowired
   private MockMvc mockMvc;
@@ -39,11 +44,19 @@ class PaymentCardIntegrationTest extends TestContainersConfig {
     return userRepository.save(user);
   }
 
+  @AfterEach
+  void clean() {
+    userRepository.deleteAll();
+    cardRepository.deleteAll();
+  }
+
   private PaymentCard createTestCard(User user) {
     PaymentCard card = new PaymentCard();
-    card.setCardNumber("1234-5678-9999-0000");
+    card.setNumber("1234567899990000");
     card.setActive(true);
     card.setUser(user);
+    card.setHolder("Test Holder");
+    card.setExpirationDate(LocalDate.of(2030, 12, 31));
     return cardRepository.save(card);
   }
 
@@ -51,16 +64,18 @@ class PaymentCardIntegrationTest extends TestContainersConfig {
   void createCard_success() throws Exception {
     User user = createTestUser();
     PaymentCardDto dto = new PaymentCardDto();
-    dto.setCardNumber("1234-5678-9999-0000");
+    dto.setNumber("1234567899990000");
     dto.setActive(true);
     dto.setUserId(user.getId());
+    dto.setHolder("Alex Artsikhovich");
+    dto.setExpirationDate(LocalDate.of(2030, 12, 31));
 
     mockMvc.perform(post("/cards")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(dto)))
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.id", notNullValue()))
-            .andExpect(jsonPath("$.cardNumber", is("1234-5678-9999-0000")));
+            .andExpect(jsonPath("$.number", is("1234567899990000")));
   }
 
   @Test
@@ -71,7 +86,7 @@ class PaymentCardIntegrationTest extends TestContainersConfig {
     mockMvc.perform(get("/cards/user/" + user.getId()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$", hasSize(1)))
-            .andExpect(jsonPath("$[0].cardNumber", is("1234-5678-9999-0000")));
+            .andExpect(jsonPath("$[0].number", is("1234567899990000")));
   }
 
   @Test
@@ -79,15 +94,17 @@ class PaymentCardIntegrationTest extends TestContainersConfig {
     User user = createTestUser();
     PaymentCard card = createTestCard(user);
     PaymentCardDto updateDto = new PaymentCardDto();
-    updateDto.setCardNumber("9999-8888-7777-6666");
+    updateDto.setNumber("9999888877776666");
     updateDto.setActive(false);
     updateDto.setUserId(user.getId());
+    updateDto.setHolder("Alex Artsikhovich");
+    updateDto.setExpirationDate(LocalDate.of(2030, 12, 31));
 
     mockMvc.perform(put("/cards/" + card.getId())
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(updateDto)))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.cardNumber", is("9999-8888-7777-6666")))
+            .andExpect(jsonPath("$.number", is("9999888877776666")))
             .andExpect(jsonPath("$.active", is(false)));
   }
 
@@ -99,7 +116,7 @@ class PaymentCardIntegrationTest extends TestContainersConfig {
     cardRepository.save(card);
 
     mockMvc.perform(patch("/cards/" + card.getId() + "/activate"))
-            .andExpect(status().isOk());
+            .andExpect(status().isNoContent());
     PaymentCard updated = cardRepository.findById(card.getId()).orElseThrow();
     assert updated.isActive();
   }
@@ -110,7 +127,7 @@ class PaymentCardIntegrationTest extends TestContainersConfig {
     PaymentCard card = createTestCard(user);
 
     mockMvc.perform(patch("/cards/" + card.getId() + "/deactivate"))
-            .andExpect(status().isOk());
+            .andExpect(status().isNoContent());
     PaymentCard updated = cardRepository.findById(card.getId()).orElseThrow();
     assert !updated.isActive();
   }

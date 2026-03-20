@@ -9,6 +9,7 @@ import by.art.user_service.repository.PaymentCardRepository;
 import by.art.user_service.repository.UserRepository;
 import by.art.user_service.repository.specification.PaymentCardSpecification;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -28,6 +29,7 @@ public class PaymentCardServiceImpl implements PaymentCardService{
   private final UserRepository userRepository;
   private final PaymentCardMapper cardMapper;
 
+  @CacheEvict(value = "user", key = "#dto.userId")
   @Override
   public PaymentCardDto create(PaymentCardDto dto) {
     User user = userRepository.findById(dto.getUserId())
@@ -67,6 +69,7 @@ public class PaymentCardServiceImpl implements PaymentCardService{
             .toList();
   }
 
+  @CacheEvict(value = "user", key = "#id")
   @Override
   @Transactional
   public PaymentCardDto update(Long id, PaymentCardDto dto) {
@@ -77,6 +80,7 @@ public class PaymentCardServiceImpl implements PaymentCardService{
     return cardMapper.toDto(card);
   }
 
+  @CacheEvict(value = "user", key = "#id")
   @Override
   @Transactional
   public void activate(Long id) {
@@ -85,6 +89,7 @@ public class PaymentCardServiceImpl implements PaymentCardService{
     card.setActive(true);
   }
 
+  @CacheEvict(value = "user", key = "#id")
   @Override
   @Transactional
   public void deactivate(Long id) {

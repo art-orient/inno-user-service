@@ -7,6 +7,8 @@ import by.art.user_service.mapper.UserMapper;
 import by.art.user_service.repository.UserRepository;
 import by.art.user_service.repository.specification.UserSpecification;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -28,6 +30,8 @@ public class UserServiceImpl implements UserService {
     return userMapper.toDto(userFromDb);
   }
 
+
+  @Cacheable(value = "user", key = "#id")
   @Override
   public UserDto getById(Long id) {
     User user = userRepository.findById(id)
@@ -43,6 +47,7 @@ public class UserServiceImpl implements UserService {
             .map(userMapper::toDto);
   }
 
+  @CacheEvict(value = "user", key = "#id")
   @Override
   @Transactional
   public UserDto update(Long id, UserDto dto) {
@@ -56,6 +61,7 @@ public class UserServiceImpl implements UserService {
     return userMapper.toDto(user);
   }
 
+  @CacheEvict(value = "user", key = "#id")
   @Override
   @Transactional
   public void activate(Long id) {
@@ -64,6 +70,7 @@ public class UserServiceImpl implements UserService {
     user.setActive(true);
   }
 
+  @CacheEvict(value = "user", key = "#id")
   @Override
   @Transactional
   public void deactivate(Long id) {
@@ -72,6 +79,7 @@ public class UserServiceImpl implements UserService {
     user.setActive(false);
   }
 
+  @CacheEvict(value = "user", key = "#id")
   @Override
   @Transactional
   public void delete(Long id) {

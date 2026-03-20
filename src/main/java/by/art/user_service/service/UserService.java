@@ -1,9 +1,21 @@
 package by.art.user_service.service;
 
-import by.art.user_service.entity.User;
-import by.art.user_service.exception.UserServiceException;
+import by.art.user_service.dto.UserDto;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface UserService {
 
-  User create(User user) throws UserServiceException;
+  UserDto create(UserDto dto);
+
+  UserDto getById(Long id);
+
+  Page<UserDto> getAll(String name, String surname, Pageable pageable);
+
+  UserDto update(Long id, UserDto dto);
+
+  void activate(Long id);
+
+  void deactivate(Long id);
+  void delete(Long id);
 }

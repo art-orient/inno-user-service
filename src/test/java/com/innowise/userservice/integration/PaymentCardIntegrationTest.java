@@ -1,15 +1,15 @@
 package com.innowise.userservice.integration;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.innowise.userservice.dto.PaymentCardDto;
 import com.innowise.userservice.entity.PaymentCard;
 import com.innowise.userservice.entity.User;
 import com.innowise.userservice.repository.PaymentCardRepository;
 import com.innowise.userservice.repository.UserRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assumptions;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -23,14 +23,13 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.DockerImageName;
 
 import java.time.LocalDate;
+import java.util.Date;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
@@ -41,14 +40,14 @@ class PaymentCardIntegrationTest {
 
   @Container
   static final PostgreSQLContainer<?> postgres =
-          new PostgreSQLContainer<>(DockerImageName.parse("postgres:15"))
+          new PostgreSQLContainer<>("postgres:15")
                   .withDatabaseName("testdb")
                   .withUsername("test")
                   .withPassword("test");
 
   @Container
   static final GenericContainer<?> redis =
-          new GenericContainer<>(DockerImageName.parse("redis:7.2"))
+          new GenericContainer<>("redis:7.2")
                   .withExposedPorts(6379);
 
   @DynamicPropertySource
@@ -56,19 +55,23 @@ class PaymentCardIntegrationTest {
     registry.add("spring.datasource.url", postgres::getJdbcUrl);
     registry.add("spring.datasource.username", postgres::getUsername);
     registry.add("spring.datasource.password", postgres::getPassword);
-
     registry.add("spring.data.redis.host", redis::getHost);
     registry.add("spring.data.redis.port", () -> redis.getMappedPort(6379));
   }
 
   @Autowired
   private MockMvc mockMvc;
+
   @Autowired
   private UserRepository userRepository;
+
   @Autowired
   private PaymentCardRepository cardRepository;
+
   @Autowired
   private ObjectMapper objectMapper;
+
+  private String jwtSecret;
 
   @BeforeAll
   static void checkDocker() {
@@ -78,19 +81,39 @@ class PaymentCardIntegrationTest {
     );
   }
 
-  private User createTestUser() {
-    User user = new User();
-    user.setName("Alex");
-    user.setSurname("Artsikhovich");
-    user.setEmail("orientirik@gmail.com");
-    user.setActive(true);
-    return userRepository.save(user);
+  @BeforeEach
+  void loadSecret() {
+    jwtSecret = System.getenv("JWT_SECRET");
+    if (jwtSecret == null) {
+      throw new IllegalStateException("JWT_SECRET is not set in environment!");
+    }
   }
 
-  @AfterEach
-  void clean() {
-    userRepository.deleteAll();
-    cardRepository.deleteAll();
+  private String token(Long userId, String role) {
+    byte[] key = Decoders.BASE64.decode(jwtSecret);
+    String jwt = Jwts.builder()
+            .claim("userId", userId)
+            .claim("role", role)
+            .claim("type", "access")
+            .setIssuedAt(new Date())
+            .setExpiration(new Date(System.currentTimeMillis() + 3600_000))
+            .signWith(Keys.hmacShaKeyFor(key))
+            .compact();
+    return "Bearer " + jwt;
+  }
+
+  private String userToken(Long userId) {
+    return token(userId, "USER");
+  }
+
+  private User createTestUser(long id) {
+    User user = new User();
+    user.setId(id);
+    user.setName("Alex");
+    user.setSurname("Artsikhovich");
+    user.setEmail("orientirik" + id + "@gmail.com");
+    user.setActive(true);
+    return userRepository.save(user);
   }
 
   private PaymentCard createTestCard(User user) {
@@ -103,22 +126,23 @@ class PaymentCardIntegrationTest {
     return cardRepository.save(card);
   }
 
-  @Test
-  void debugEnv() {
-    System.out.println("JWT_SECRET=" + System.getenv("JWT_SECRET"));
+  @AfterEach
+  void clean() {
+    cardRepository.deleteAll();
+    userRepository.deleteAll();
   }
 
   @Test
   void createCard_success() throws Exception {
-    User user = createTestUser();
+    User user = createTestUser(100L);
     PaymentCardDto dto = new PaymentCardDto();
     dto.setNumber("1234567899990000");
     dto.setActive(true);
     dto.setUserId(user.getId());
     dto.setHolder("Alex Artsikhovich");
     dto.setExpirationDate(LocalDate.of(2030, 12, 31));
-
-    mockMvc.perform(post("/payment-cards")
+    mockMvc.perform(post("/api/cards")
+                    .header("Authorization", userToken(user.getId()))
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(dto)))
             .andExpect(status().isCreated())
@@ -128,10 +152,10 @@ class PaymentCardIntegrationTest {
 
   @Test
   void getCardsByUser_success() throws Exception {
-    User user = createTestUser();
+    User user = createTestUser(200L);
     createTestCard(user);
-
-    mockMvc.perform(get("/payment-cards/users/" + user.getId() + "/payment-cards"))
+    mockMvc.perform(get("/api/cards/users/" + user.getId() + "/payment-cards")
+                    .header("Authorization", userToken(user.getId())))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$", hasSize(1)))
             .andExpect(jsonPath("$[0].number", is("1234567899990000")));
@@ -139,7 +163,7 @@ class PaymentCardIntegrationTest {
 
   @Test
   void updateCard_success() throws Exception {
-    User user = createTestUser();
+    User user = createTestUser(300L);
     PaymentCard card = createTestCard(user);
     PaymentCardDto updateDto = new PaymentCardDto();
     updateDto.setNumber("9999888877776666");
@@ -147,8 +171,8 @@ class PaymentCardIntegrationTest {
     updateDto.setUserId(user.getId());
     updateDto.setHolder("Alex Artsikhovich");
     updateDto.setExpirationDate(LocalDate.of(2030, 12, 31));
-
-    mockMvc.perform(put("/payment-cards/" + card.getId())
+    mockMvc.perform(put("/api/cards/" + card.getId())
+                    .header("Authorization", userToken(user.getId()))
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(updateDto)))
             .andExpect(status().isOk())
@@ -158,12 +182,12 @@ class PaymentCardIntegrationTest {
 
   @Test
   void activateCard_success() throws Exception {
-    User user = createTestUser();
+    User user = createTestUser(400L);
     PaymentCard card = createTestCard(user);
     card.setActive(false);
     cardRepository.save(card);
-
-    mockMvc.perform(patch("/payment-cards/" + card.getId() + "/status"))
+    mockMvc.perform(patch("/api/cards/" + card.getId() + "/status")
+                    .header("Authorization", userToken(user.getId())))
             .andExpect(status().isNoContent());
     PaymentCard updated = cardRepository.findById(card.getId()).orElseThrow();
     assert updated.isActive();
@@ -171,17 +195,16 @@ class PaymentCardIntegrationTest {
 
   @Test
   void deleteCard_softDelete_success() throws Exception {
-    User user = createTestUser();
-    user = userRepository.save(user);
+    User user = createTestUser(500L);
     PaymentCard card = createTestCard(user);
-    card = cardRepository.save(card);
-    mockMvc.perform(delete("/payment-cards/" + card.getId()))
-            .andDo(print())
+    mockMvc.perform(delete("/api/cards/" + card.getId())
+                    .header("Authorization", userToken(user.getId())))
             .andExpect(status().isNoContent());
     PaymentCard deletedCard = cardRepository.findById(card.getId())
-            .orElseThrow(() -> new AssertionError("Card must still exist in DB"));
-    assertFalse(deletedCard.isActive(), "Card must be soft-deleted (active=false)");
-    mockMvc.perform(get("/payment-cards/" + card.getId()))
+            .orElseThrow();
+    assertFalse(deletedCard.isActive());
+    mockMvc.perform(get("/api/cards/" + card.getId())
+                    .header("Authorization", userToken(user.getId())))
             .andExpect(status().isNotFound());
   }
 }

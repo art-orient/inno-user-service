@@ -9,6 +9,7 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -67,6 +68,7 @@ class UserIntegrationTest {
   @Autowired
   private ObjectMapper objectMapper;
 
+  @Value("${jwt.secret}")
   private String jwtSecret;
 
   @BeforeAll
@@ -75,14 +77,6 @@ class UserIntegrationTest {
             DockerClientFactory.instance().isDockerAvailable(),
             "Skipping integration tests because Docker is not available"
     );
-  }
-
-  @BeforeEach
-  void loadSecret() {
-    jwtSecret = System.getenv("JWT_SECRET");
-    if (jwtSecret == null) {
-      throw new IllegalStateException("JWT_SECRET is not set in environment!");
-    }
   }
 
   private String token(Long userId, String role) {

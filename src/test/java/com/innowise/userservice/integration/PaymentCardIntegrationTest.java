@@ -104,6 +104,11 @@ class PaymentCardIntegrationTest {
   }
 
   @Test
+  void debugEnv() {
+    System.out.println("JWT_SECRET=" + System.getenv("JWT_SECRET"));
+  }
+
+  @Test
   void createCard_success() throws Exception {
     User user = createTestUser();
     PaymentCardDto dto = new PaymentCardDto();

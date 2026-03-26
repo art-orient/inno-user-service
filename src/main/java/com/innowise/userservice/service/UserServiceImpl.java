@@ -25,10 +25,16 @@ public class UserServiceImpl implements UserService {
 
   @Override
   @Transactional
-  public UserDto create(UserDto userDto) {
-    User user = userMapper.toEntity(userDto);
-    User userFromDb = userRepository.save(user);
-    return userMapper.toDto(userFromDb);
+  public UserDto create(UserDto dto) {
+    User user = userRepository.findById(dto.getId())
+            .orElseGet(() -> userMapper.toEntity(dto));
+    user.setName(dto.getName());
+    user.setSurname(dto.getSurname());
+    user.setEmail(dto.getEmail());
+    user.setBirthDate(dto.getBirthDate());
+    user.setActive(true);
+    User saved = userRepository.save(user);
+    return userMapper.toDto(saved);
   }
 
 
@@ -86,5 +92,10 @@ public class UserServiceImpl implements UserService {
     User user = userRepository.findById(id)
             .orElseThrow(() -> new UserServiceException(USER_NOT_FOUND));
     user.setActive(false);
+  }
+
+  @Override
+  public boolean exists(Long id) {
+    return userRepository.existsById(id);
   }
 }

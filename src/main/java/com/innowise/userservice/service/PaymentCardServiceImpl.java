@@ -8,6 +8,7 @@ import com.innowise.userservice.mapper.PaymentCardMapper;
 import com.innowise.userservice.repository.PaymentCardRepository;
 import com.innowise.userservice.repository.UserRepository;
 import com.innowise.userservice.repository.specification.PaymentCardSpecification;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
@@ -105,5 +106,12 @@ public class PaymentCardServiceImpl implements PaymentCardService{
             .orElseThrow(() -> new UserServiceException(CARD_NOT_FOUND));
     card.setActive(false);
     return card;
+  }
+
+  @Override
+  public Long getOwnerId(Long cardId) {
+    return cardRepository.findById(cardId)
+            .map(card -> card.getUser().getId())
+            .orElseThrow(() -> new EntityNotFoundException(CARD_NOT_FOUND));
   }
 }

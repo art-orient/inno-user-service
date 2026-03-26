@@ -10,6 +10,9 @@ jobs:
   build-test-sonar-docker:
     runs-on: ubuntu-latest
 
+    env:
+      jwt.secret: ${{ secrets.JWT_SECRET }}
+
     steps:
       # 1. Checkout
       - name: Checkout repository

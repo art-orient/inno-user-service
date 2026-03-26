@@ -11,7 +11,10 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      jwt.secret: ${{ secrets.JWT_SECRET }}
+      SPRING_APPLICATION_JSON: |
+        {
+          "jwt.secret": "${{ secrets.JWT_SECRET }}"
+        }
 
     steps:
       # 1. Checkout

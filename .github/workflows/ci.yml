@@ -10,6 +10,12 @@ jobs:
   build-test-sonar-docker:
     runs-on: ubuntu-latest
 
+    env:
+      SPRING_APPLICATION_JSON: |
+        {
+          "jwt.secret": "${{ secrets.JWT_SECRET }}"
+        }
+
     steps:
       # 1. Checkout
       - name: Checkout repository

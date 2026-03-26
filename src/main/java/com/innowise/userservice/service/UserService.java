@@ -61,4 +61,16 @@ public interface UserService {
    * @param id the identifier of the user to delete
    */
   void delete(Long id);
+
+  /**
+   * Checks whether a user with the specified identifier exists in the system.
+   *
+   * <p>This method is primarily used for authorization checks to ensure that
+   * access control logic does not operate on non‑existent users, preventing
+   * incorrect authorization decisions and avoiding unnecessary exceptions.</p>
+   *
+   * @param id the unique identifier of the user
+   * @return {@code true} if a user with the given ID exists; {@code false} otherwise
+   */
+  boolean exists(Long id);
 }

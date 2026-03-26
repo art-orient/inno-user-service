@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -20,22 +21,26 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping("api/users")
 @RequiredArgsConstructor
 public class UserController {
+
   private final UserService userService;
 
+  @PreAuthorize("hasRole('ADMIN') or @userSecurity.isSelfCreate(#dto)")
   @PostMapping
   public ResponseEntity<UserDto> create(@Valid @RequestBody UserDto dto) {
     UserDto created = userService.create(dto);
     return ResponseEntity.status(HttpStatus.CREATED).body(created);
   }
 
+  @PreAuthorize("hasRole('ADMIN') or @userSecurity.isSelf(#id)")
   @GetMapping("/{id}")
   public ResponseEntity<UserDto> getById(@PathVariable Long id) {
     return ResponseEntity.ok(userService.getById(id));
   }
 
+  @PreAuthorize("hasRole('ADMIN')")
   @GetMapping
   public ResponseEntity<Page<UserDto>> getAll(
           @RequestParam(required = false) String name,
@@ -44,17 +49,22 @@ public class UserController {
     return ResponseEntity.ok(userService.getAll(name, surname, pageable));
   }
 
+  @PreAuthorize("hasRole('ADMIN') or @userSecurity.isSelf(#id)")
   @PutMapping("/{id}")
-  public ResponseEntity<UserDto> update(@PathVariable Long id, @Valid @RequestBody UserDto dto) {
+  public ResponseEntity<UserDto> update(
+          @PathVariable Long id,
+          @Valid @RequestBody UserDto dto) {
     return ResponseEntity.ok(userService.update(id, dto));
   }
 
+  @PreAuthorize("hasRole('ADMIN') or @userSecurity.isSelf(#id)")
   @PatchMapping("/{id}/status")
   public ResponseEntity<Void> activate(@PathVariable Long id) {
     userService.activate(id);
     return ResponseEntity.noContent().build();
   }
 
+  @PreAuthorize("hasRole('ADMIN') or @userSecurity.isSelf(#id)")
   @DeleteMapping("/{id}")
   public ResponseEntity<Void> delete(@PathVariable Long id) {
     userService.delete(id);

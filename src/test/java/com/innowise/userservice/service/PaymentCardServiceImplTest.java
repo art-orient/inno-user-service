@@ -7,6 +7,7 @@ import com.innowise.userservice.exception.UserServiceException;
 import com.innowise.userservice.mapper.PaymentCardMapper;
 import com.innowise.userservice.repository.PaymentCardRepository;
 import com.innowise.userservice.repository.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,6 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.Optional;
 
@@ -132,6 +134,19 @@ class PaymentCardServiceImplTest {
   }
 
   @Test
+  void update_updatesAllFields() {
+    cardDto.setHolder("NEW HOLDER");
+    cardDto.setExpirationDate(LocalDate.of(2030, 12, 31));
+    cardDto.setActive(false);
+    when(cardRepository.findById(10L)).thenReturn(Optional.of(card));
+    when(cardMapper.toDto(card)).thenReturn(cardDto);
+    PaymentCardDto result = cardService.update(10L, cardDto);
+    assertEquals("NEW HOLDER", result.getHolder());
+    assertEquals(LocalDate.of(2030, 12, 31), result.getExpirationDate());
+    assertFalse(card.isActive());
+  }
+
+  @Test
   void activate_success() {
     when(cardRepository.findById(10L)).thenReturn(Optional.of(card));
     cardService.activate(10L);
@@ -172,5 +187,19 @@ class PaymentCardServiceImplTest {
   void delete_cardNotFound() {
     when(cardRepository.findById(10L)).thenReturn(Optional.empty());
     assertThrows(UserServiceException.class, () -> cardService.delete(10L));
+  }
+
+  @Test
+  void getOwnerId_success() {
+    when(cardRepository.findById(10L)).thenReturn(Optional.of(card));
+    Long ownerId = cardService.getOwnerId(10L);
+    assertEquals(1L, ownerId);
+    verify(cardRepository).findById(10L);
+  }
+
+  @Test
+  void getOwnerId_cardNotFound() {
+    when(cardRepository.findById(10L)).thenReturn(Optional.empty());
+    assertThrows(EntityNotFoundException.class, () -> cardService.getOwnerId(10L));
   }
 }

@@ -92,10 +92,6 @@ class UserIntegrationTest {
     return "Bearer " + jwt;
   }
 
-  private String adminToken() {
-    return token(999L, "ADMIN");
-  }
-
   private String userToken(Long userId) {
     return token(userId, "USER");
   }

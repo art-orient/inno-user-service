@@ -141,8 +141,8 @@ class PaymentCardServiceImplTest {
     when(cardRepository.findById(10L)).thenReturn(Optional.of(card));
     when(cardMapper.toDto(card)).thenReturn(cardDto);
     PaymentCardDto result = cardService.update(10L, cardDto);
-    assertEquals("NEW HOLDER", card.getHolder());
-    assertEquals(LocalDate.of(2030, 12, 31), card.getExpirationDate());
+    assertEquals("NEW HOLDER", result.getHolder());
+    assertEquals(LocalDate.of(2030, 12, 31), result.getExpirationDate());
     assertFalse(card.isActive());
   }
 

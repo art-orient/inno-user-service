@@ -75,4 +75,17 @@ public interface PaymentCardService {
    * @return the deleted payment card entity
    */
   PaymentCard delete(Long id);
+
+  /**
+   * Retrieves the identifier of the user who owns the specified payment card.
+   *
+   * <p>This method is primarily used for authorization checks, allowing the
+   * system to verify whether the authenticated user has access rights to
+   * perform operations on the given card.</p>
+   *
+   * @param cardId the unique identifier of the payment card
+   * @return the ID of the user who owns the card
+   * @throws jakarta.persistence.EntityNotFoundException if the card does not exist
+   */
+  Long getOwnerId(Long cardId);
 }

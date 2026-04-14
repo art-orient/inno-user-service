@@ -29,7 +29,6 @@ import java.util.List;
 public class User extends Auditable {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
   private String name;

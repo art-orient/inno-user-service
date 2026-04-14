@@ -158,4 +158,20 @@ class UserServiceImplTest {
     when(userRepository.findById(1L)).thenReturn(Optional.empty());
     assertThrows(UserServiceException.class, () -> userService.activate(1L));
   }
+
+  @Test
+  void exists_true() {
+    when(userRepository.existsById(1L)).thenReturn(true);
+    boolean result = userService.exists(1L);
+    assertTrue(result);
+    verify(userRepository).existsById(1L);
+  }
+
+  @Test
+  void exists_false() {
+    when(userRepository.existsById(1L)).thenReturn(false);
+    boolean result = userService.exists(1L);
+    assertFalse(result);
+    verify(userRepository).existsById(1L);
+  }
 }

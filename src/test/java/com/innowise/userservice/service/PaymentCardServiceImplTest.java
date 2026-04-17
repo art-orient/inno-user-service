@@ -27,6 +27,7 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class PaymentCardServiceImplTest {
+
   @Mock
   private PaymentCardRepository cardRepository;
   @Mock
@@ -35,6 +36,7 @@ class PaymentCardServiceImplTest {
   private PaymentCardMapper cardMapper;
   @InjectMocks
   private PaymentCardServiceImpl cardService;
+
   private User user;
   private PaymentCard card;
   private PaymentCardDto cardDto;
@@ -43,17 +45,12 @@ class PaymentCardServiceImplTest {
   void setUp() {
     user = new User();
     user.setId(1L);
-    user.setName("Alex");
-    user.setSurname("Artsikhovich");
-    user.setEmail("orientirik@gmail.com");
     user.setActive(true);
-
     card = new PaymentCard();
     card.setId(10L);
     card.setNumber("1234-5678-9999-0000");
     card.setActive(true);
     card.setUser(user);
-
     cardDto = new PaymentCardDto();
     cardDto.setId(10L);
     cardDto.setNumber("1234-5678-9999-0000");
@@ -64,13 +61,13 @@ class PaymentCardServiceImplTest {
   @Test
   void create_success() {
     when(userRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(user));
-    when(cardMapper.toEntity(any(PaymentCardDto.class))).thenReturn(card);
-    when(cardRepository.save(any(PaymentCard.class))).thenReturn(card);
-    when(cardMapper.toDto(any(PaymentCard.class))).thenReturn(cardDto);
+    when(cardMapper.toEntity(cardDto)).thenReturn(card);
+    when(cardRepository.save(card)).thenReturn(card);
+    when(cardMapper.toDto(card)).thenReturn(cardDto);
     PaymentCardDto result = cardService.create(cardDto);
     assertNotNull(result);
     assertEquals("1234-5678-9999-0000", result.getNumber());
-    verify(cardRepository).save(any(PaymentCard.class));
+    verify(cardRepository).save(card);
   }
 
   @Test
@@ -81,7 +78,7 @@ class PaymentCardServiceImplTest {
 
   @Test
   void create_cardLimitExceeded() {
-    user.setCards(Collections.nCopies(5, new PaymentCard())); // имитируем 5 карт
+    user.setCards(Collections.nCopies(5, new PaymentCard()));
     when(userRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(user));
     assertThrows(UserServiceException.class, () -> cardService.create(cardDto));
   }
@@ -119,6 +116,15 @@ class PaymentCardServiceImplTest {
   }
 
   @Test
+  void getByUserId_success() {
+    when(cardRepository.findAllByUserIdAndActiveTrue(1L)).thenReturn(Collections.singletonList(card));
+    when(cardMapper.toDto(card)).thenReturn(cardDto);
+    var result = cardService.getByUserId(1L);
+    assertEquals(1, result.size());
+    assertEquals("1234-5678-9999-0000", result.get(0).getNumber());
+  }
+
+  @Test
   void update_success() {
     when(cardRepository.findById(10L)).thenReturn(Optional.of(card));
     when(cardMapper.toDto(card)).thenReturn(cardDto);
@@ -148,6 +154,7 @@ class PaymentCardServiceImplTest {
 
   @Test
   void activate_success() {
+    card.setActive(false);
     when(cardRepository.findById(10L)).thenReturn(Optional.of(card));
     cardService.activate(10L);
     assertTrue(card.isActive());
@@ -160,26 +167,10 @@ class PaymentCardServiceImplTest {
   }
 
   @Test
-  void getByUserId_success() {
-    when(userRepository.existsById(1L)).thenReturn(true);
-    when(cardRepository.findAllByUserIdAndActiveTrue(1L)).thenReturn(Collections.singletonList(card));
-    when(cardMapper.toDto(card)).thenReturn(cardDto);
-    var result = cardService.getByUserId(1L);
-    assertEquals(1, result.size());
-    assertEquals("1234-5678-9999-0000", result.get(0).getNumber());
-  }
-
-  @Test
-  void getByUserId_userNotFound() {
-    when(userRepository.existsById(1L)).thenReturn(false);
-    assertThrows(UserServiceException.class, () -> cardService.getByUserId(1L));
-  }
-
-  @Test
   void delete_success() {
     when(cardRepository.findById(10L)).thenReturn(Optional.of(card));
-    PaymentCard result = cardService.delete(10L);
-    assertFalse(result.isActive());
+    cardService.delete(10L);
+    assertFalse(card.isActive());
     verify(cardRepository).findById(10L);
   }
 

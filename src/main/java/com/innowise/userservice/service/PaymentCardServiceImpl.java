@@ -66,16 +66,13 @@ public class PaymentCardServiceImpl implements PaymentCardService{
 
   @Override
   public List<PaymentCardDto> getByUserId(Long userId) {
-    if (!userRepository.existsById(userId)) {
-      throw new UserServiceException(USER_NOT_FOUND);
-    }
     return cardRepository.findAllByUserIdAndActiveTrue(userId)
             .stream()
             .map(cardMapper::toDto)
             .toList();
   }
 
-  @CacheEvict(value = "user", key = "#dto.userId")
+  @CacheEvict(value = "user", key = "#result.userId")
   @Override
   @Transactional
   public PaymentCardDto update(Long id, PaymentCardDto dto) {
@@ -88,24 +85,22 @@ public class PaymentCardServiceImpl implements PaymentCardService{
     return cardMapper.toDto(card);
   }
 
-  @CacheEvict(value = "user", key = "#result.user.id")
+  @CacheEvict(value = "user", key = "#id")
   @Override
   @Transactional
-  public PaymentCard activate(Long id) {
+  public void activate(Long id) {
     PaymentCard card = cardRepository.findById(id)
             .orElseThrow(() -> new UserServiceException(CARD_NOT_FOUND));
     card.setActive(true);
-    return card;
   }
 
-  @CacheEvict(value = "user", key = "#result.user.id")
+  @CacheEvict(value = "user", key = "#id")
   @Override
   @Transactional
-  public PaymentCard delete(Long id) {
+  public void delete(Long id) {
     PaymentCard card = cardRepository.findById(id)
             .orElseThrow(() -> new UserServiceException(CARD_NOT_FOUND));
     card.setActive(false);
-    return card;
   }
 
   @Override

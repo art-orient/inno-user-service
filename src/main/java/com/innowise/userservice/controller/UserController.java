@@ -27,7 +27,6 @@ public class UserController {
 
   private final UserService userService;
 
-  @PreAuthorize("hasRole('ADMIN') or @userSecurity.isSelfCreate(#dto)")
   @PostMapping
   public ResponseEntity<UserDto> create(@Valid @RequestBody UserDto dto) {
     UserDto created = userService.create(dto);
@@ -58,16 +57,24 @@ public class UserController {
   }
 
   @PreAuthorize("hasRole('ADMIN') or @userSecurity.isSelf(#id)")
-  @PatchMapping("/{id}/status")
+  @PatchMapping("/{id}/activate")
   public ResponseEntity<Void> activate(@PathVariable Long id) {
     userService.activate(id);
     return ResponseEntity.noContent().build();
   }
 
+
   @PreAuthorize("hasRole('ADMIN') or @userSecurity.isSelf(#id)")
+  @PatchMapping("/{id}/deactivate")
+  public ResponseEntity<Void> deactivate(@PathVariable Long id) {
+    userService.deactivate(id);
+    return ResponseEntity.noContent().build();
+  }
+
   @DeleteMapping("/{id}")
-  public ResponseEntity<Void> delete(@PathVariable Long id) {
-    userService.delete(id);
+  @PreAuthorize("permitAll()")
+  public ResponseEntity<Void> hardDelete(@PathVariable Long id) {
+    userService.hardDelete(id);
     return ResponseEntity.noContent().build();
   }
 }

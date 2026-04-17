@@ -27,6 +27,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import java.util.Date;
 
 import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -155,14 +156,40 @@ class UserIntegrationTest {
   }
 
   @Test
-  void deleteUser_softDelete_success() throws Exception {
+  void activateUser_success() throws Exception {
+    User user = createTestUser(500L);
+    user.setActive(false);
+    userRepository.save(user);
+    mockMvc.perform(patch("/api/users/" + user.getId() + "/activate")
+                    .header("Authorization", userToken(user.getId())))
+            .andExpect(status().isNoContent());
+    User updated = userRepository.findById(user.getId()).orElseThrow();
+    assertTrue(updated.isActive());
+    mockMvc.perform(get("/api/users/" + user.getId())
+                    .header("Authorization", userToken(user.getId())))
+            .andExpect(status().isOk());
+  }
+
+  @Test
+  void deactivateUser_success() throws Exception {
+    User user = createTestUser(600L);
+    mockMvc.perform(patch("/api/users/" + user.getId() + "/deactivate")
+                    .header("Authorization", userToken(user.getId())))
+            .andExpect(status().isNoContent());
+    User updated = userRepository.findById(user.getId()).orElseThrow();
+    assertFalse(updated.isActive());
+    mockMvc.perform(get("/api/users/" + user.getId())
+                    .header("Authorization", userToken(user.getId())))
+            .andExpect(status().isNotFound());
+  }
+
+  @Test
+  void deleteUser_hardDelete_success() throws Exception {
     User user = createTestUser(400L);
     mockMvc.perform(delete("/api/users/" + user.getId())
                     .header("Authorization", userToken(user.getId())))
             .andExpect(status().isNoContent());
-    User deleted = userRepository.findById(user.getId())
-            .orElseThrow();
-    assertFalse(deleted.isActive());
+    assertFalse(userRepository.findById(user.getId()).isPresent());
     mockMvc.perform(get("/api/users/" + user.getId())
                     .header("Authorization", userToken(user.getId())))
             .andExpect(status().isNotFound());

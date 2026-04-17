@@ -53,7 +53,7 @@ public class PaymentCardController {
   }
 
   @PreAuthorize("hasRole('ADMIN') or #userId == authentication.principal.userId")
-  @GetMapping("/users/{userId}/payment-cards")
+  @GetMapping("/user/{userId}")
   public ResponseEntity<List<PaymentCardDto>> getByUserId(@PathVariable Long userId) {
     return ResponseEntity.ok(cardService.getByUserId(userId));
   }
@@ -67,7 +67,7 @@ public class PaymentCardController {
   }
 
   @PreAuthorize("hasRole('ADMIN') or @cardSecurity.isOwner(#id)")
-  @PatchMapping("/{id}/status")
+  @PatchMapping("/{id}/activate")
   public ResponseEntity<Void> activate(@PathVariable Long id) {
     cardService.activate(id);
     return ResponseEntity.noContent().build();
@@ -76,8 +76,7 @@ public class PaymentCardController {
   @PreAuthorize("hasRole('ADMIN') or @cardSecurity.isOwner(#id)")
   @DeleteMapping("/{id}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  public ResponseEntity<Void> delete(@PathVariable Long id) {
+  public void delete(@PathVariable Long id) {
     cardService.delete(id);
-    return ResponseEntity.noContent().build();
   }
 }

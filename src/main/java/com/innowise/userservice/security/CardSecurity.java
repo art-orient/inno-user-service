@@ -13,10 +13,13 @@ public class CardSecurity {
 
   public boolean isOwner(Long cardId) {
     Long ownerId = cardService.getOwnerId(cardId);
-    AuthUser auth = (AuthUser) SecurityContextHolder
-            .getContext()
-            .getAuthentication()
-            .getPrincipal();
-    return ownerId.equals(auth.getUserId());
+    if (ownerId == null) {
+      return false;
+    }
+    var auth = SecurityContextHolder.getContext().getAuthentication();
+    if (auth == null || !(auth.getPrincipal() instanceof AuthUser principal)) {
+      return false;
+    }
+    return ownerId.equals(principal.userId());
   }
 }

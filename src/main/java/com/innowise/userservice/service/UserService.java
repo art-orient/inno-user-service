@@ -32,7 +32,7 @@ public interface UserService {
   /**
    * Retrieves a paginated list of users filtered by name and surname.
    *
-   * @param name     optional filter by user name
+   * @param name     optional filter by username
    * @param surname  optional filter by user surname
    * @param pageable pagination and sorting information
    * @return a page of users matching the filters
@@ -56,11 +56,29 @@ public interface UserService {
   void activate(Long id);
 
   /**
-   * Deletes a user by its identifier.
+   * Performs a soft delete of a user by deactivating the account.
+   * <p>
+   * This operation marks the user as inactive without removing the record
+   * from the database. It is used for regular business operations when a user
+   * or administrator disables an account.
+   * </p>
    *
-   * @param id the identifier of the user to delete
+   * @param id the identifier of the user to deactivate
    */
-  void delete(Long id);
+  void deactivate(Long id);
+
+  /**
+   * Performs a hard delete of a user by permanently removing the record.
+   * <p>
+   * This operation is intended exclusively for system-level cleanup scenarios,
+   * such as rollback during the registration Saga executed by the API Gateway.
+   * It physically deletes the user from the database and must not be used
+   * in regular business flows.
+   * </p>
+   *
+   * @param id the identifier of the user to delete permanently
+   */
+  void hardDelete(Long id);
 
   /**
    * Checks whether a user with the specified identifier exists in the system.

@@ -88,10 +88,19 @@ public class UserServiceImpl implements UserService {
   @CacheEvict(value = "user", key = "#id")
   @Override
   @Transactional
-  public void delete(Long id) {
+  public void deactivate(Long id) {
     User user = userRepository.findById(id)
             .orElseThrow(() -> new UserServiceException(USER_NOT_FOUND));
     user.setActive(false);
+  }
+
+  @CacheEvict(value = "user", key = "#id")
+  @Override
+  @Transactional
+  public void hardDelete(Long id) {
+    User user = userRepository.findById(id)
+            .orElseThrow(() -> new UserServiceException(USER_NOT_FOUND));
+    userRepository.delete(user);
   }
 
   @Override

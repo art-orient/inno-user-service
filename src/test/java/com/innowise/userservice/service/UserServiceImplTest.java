@@ -58,20 +58,27 @@ class UserServiceImplTest {
     when(userMapper.toDto(user)).thenReturn(userDto);
     UserDto result = userService.create(userDto);
     assertNotNull(result);
+    assertTrue(user.isActive());
     verify(userRepository).findById(1L);
     verify(userMapper).toEntity(userDto);
     verify(userRepository).save(user);
+    verify(userMapper).toDto(user);
   }
 
   @Test
-  void create_updatesExistingUserWhenIdExists() {
+  void create_throwsExceptionWhenUserAlreadyExists() {
     when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-    when(userRepository.save(user)).thenReturn(user);
-    when(userMapper.toDto(user)).thenReturn(userDto);
-    UserDto result = userService.create(userDto);
-    assertEquals("Alex", result.getName());
+    assertThrows(UserServiceException.class, () -> userService.create(userDto));
     verify(userRepository).findById(1L);
-    verify(userRepository).save(user);
+    verify(userRepository, never()).save(any());
+  }
+
+  @Test
+  void create_throwsExceptionWhenIdIsNull() {
+    userDto.setId(null);
+    assertThrows(UserServiceException.class, () -> userService.create(userDto));
+    verify(userRepository, never()).findById(any());
+    verify(userRepository, never()).save(any());
   }
 
   @Test

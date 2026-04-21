@@ -26,15 +26,15 @@ public class UserServiceImpl implements UserService {
   @Override
   @Transactional
   public UserDto create(UserDto dto) {
-    User user = userRepository.findById(dto.getId())
-            .orElseGet(() -> userMapper.toEntity(dto));
-    user.setName(dto.getName());
-    user.setSurname(dto.getSurname());
-    user.setEmail(dto.getEmail());
-    user.setBirthDate(dto.getBirthDate());
+    if (dto.getId() == null) {
+      throw new UserServiceException("User ID must not be null");
+    }
+    userRepository.findById(dto.getId())
+            .ifPresent(u -> {throw new UserServiceException("User already exists");});
+    User user = userMapper.toEntity(dto);
     user.setActive(true);
-    User saved = userRepository.save(user);
-    return userMapper.toDto(saved);
+    userRepository.save(user);
+    return userMapper.toDto(user);
   }
 
 

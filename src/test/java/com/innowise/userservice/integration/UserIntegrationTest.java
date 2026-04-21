@@ -24,6 +24,7 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.time.LocalDate;
 import java.util.Date;
 
 import static org.hamcrest.Matchers.*;
@@ -142,9 +143,11 @@ class UserIntegrationTest {
   void updateUser_success() throws Exception {
     User user = createTestUser(300L);
     UserDto updateDto = new UserDto();
+    updateDto.setId(user.getId());
     updateDto.setName("Updated");
     updateDto.setSurname("User");
     updateDto.setEmail("updated300@gmail.com");
+    updateDto.setBirthDate(LocalDate.of(1990, 1, 1));
     updateDto.setActive(false);
     mockMvc.perform(put("/api/users/" + user.getId())
                     .header("Authorization", userToken(user.getId()))
@@ -152,6 +155,9 @@ class UserIntegrationTest {
                     .content(objectMapper.writeValueAsString(updateDto)))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.name", is("Updated")))
+            .andExpect(jsonPath("$.surname", is("User")))
+            .andExpect(jsonPath("$.email", is("updated300@gmail.com")))
+            .andExpect(jsonPath("$.birthDate", is("1990-01-01")))
             .andExpect(jsonPath("$.active", is(false)));
   }
 
@@ -187,11 +193,18 @@ class UserIntegrationTest {
   void deleteUser_hardDelete_success() throws Exception {
     User user = createTestUser(400L);
     mockMvc.perform(delete("/api/users/" + user.getId())
-                    .header("Authorization", userToken(user.getId())))
+                    .header("X-Saga-Delete", "true"))
             .andExpect(status().isNoContent());
     assertFalse(userRepository.findById(user.getId()).isPresent());
     mockMvc.perform(get("/api/users/" + user.getId())
                     .header("Authorization", userToken(user.getId())))
             .andExpect(status().isNotFound());
+  }
+
+  @Test
+  void deleteUser_withoutSagaHeader_forbidden() throws Exception {
+    User user = createTestUser(401L);
+    mockMvc.perform(delete("/api/users/" + user.getId()))
+            .andExpect(status().isForbidden());
   }
 }

@@ -72,7 +72,6 @@ public class UserController {
   }
 
   @DeleteMapping("/{id}")
-  @PreAuthorize("permitAll()")
   public ResponseEntity<Void> hardDelete(@PathVariable Long id) {
     userService.hardDelete(id);
     return ResponseEntity.noContent().build();

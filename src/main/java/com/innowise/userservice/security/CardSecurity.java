@@ -11,15 +11,15 @@ public class CardSecurity {
 
   private final PaymentCardService cardService;
 
-  public boolean isOwner(Long cardId) {
-    Long ownerId = cardService.getOwnerId(cardId);
-    if (ownerId == null) {
-      return false;
-    }
+  public boolean isOwner(Long userId, Long cardId) {
     var auth = SecurityContextHolder.getContext().getAuthentication();
     if (auth == null || !(auth.getPrincipal() instanceof AuthUser principal)) {
       return false;
     }
-    return ownerId.equals(principal.userId());
+    if (!userId.equals(principal.userId())) {
+      return false;
+    }
+    Long ownerId = cardService.getOwnerId(cardId);
+    return ownerId != null && ownerId.equals(userId);
   }
 }

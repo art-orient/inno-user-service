@@ -10,10 +10,10 @@ public class UserSecurity {
 
   public boolean isSelf(Long userId) {
     var auth = SecurityContextHolder.getContext().getAuthentication();
-    if (auth == null || !(auth.getPrincipal() instanceof AuthUser principal)) {
+    if (auth == null || !(auth.getPrincipal() instanceof Long principal)) {
       return false;
     }
-    return userId.equals(principal.userId());
+    return userId.equals(principal);
   }
 
   public boolean isSagaDeleteRequest() {

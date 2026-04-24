@@ -27,7 +27,7 @@ public class PaymentCardController {
 
   private final PaymentCardService cardService;
 
-  @PreAuthorize("hasRole('ADMIN') or #dto.userId == authentication.principal.userId")
+  @PreAuthorize("hasRole('ADMIN') or #dto.userId == authentication.principal")
   @PostMapping
   public ResponseEntity<PaymentCardDto> create(@PathVariable Long userId, @Valid @RequestBody PaymentCardDto dto) {
     dto.setUserId(userId);
@@ -41,7 +41,7 @@ public class PaymentCardController {
     return ResponseEntity.ok(cardService.getById(cardId));
   }
 
-  @PreAuthorize("hasRole('ADMIN') or #userId == authentication.principal.userId")
+  @PreAuthorize("hasRole('ADMIN') or #userId == authentication.principal")
   @GetMapping("/list")
   public ResponseEntity<List<PaymentCardDto>> getByUserId(@PathVariable Long userId) {
     return ResponseEntity.ok(cardService.getByUserId(userId));
@@ -50,7 +50,7 @@ public class PaymentCardController {
   @PreAuthorize("hasRole('ADMIN') or @cardSecurity.isOwner(#userId, #cardId)")
   @PutMapping("/{cardId}")
   public ResponseEntity<PaymentCardDto> update(@PathVariable Long userId, @PathVariable Long cardId,
-                                                       @Valid @RequestBody PaymentCardDto dto) {
+                                               @Valid @RequestBody PaymentCardDto dto) {
     return ResponseEntity.ok(cardService.update(cardId, dto));
   }
 

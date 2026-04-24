@@ -27,6 +27,7 @@ public class UserController {
 
   private final UserService userService;
 
+  @PreAuthorize("permitAll()")
   @PostMapping
   public ResponseEntity<UserDto> create(@Valid @RequestBody UserDto dto) {
     UserDto created = userService.create(dto);
@@ -71,6 +72,7 @@ public class UserController {
     return ResponseEntity.noContent().build();
   }
 
+  @PreAuthorize("@userSecurity.isSagaDeleteRequest()")
   @DeleteMapping("/{id}")
   public ResponseEntity<Void> hardDelete(@PathVariable Long id) {
     userService.hardDelete(id);

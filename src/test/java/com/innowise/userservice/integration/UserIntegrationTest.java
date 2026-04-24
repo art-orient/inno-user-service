@@ -24,9 +24,11 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.time.LocalDate;
 import java.util.Date;
 
 import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -141,9 +143,11 @@ class UserIntegrationTest {
   void updateUser_success() throws Exception {
     User user = createTestUser(300L);
     UserDto updateDto = new UserDto();
+    updateDto.setId(user.getId());
     updateDto.setName("Updated");
     updateDto.setSurname("User");
     updateDto.setEmail("updated300@gmail.com");
+    updateDto.setBirthDate(LocalDate.of(1990, 1, 1));
     updateDto.setActive(false);
     mockMvc.perform(put("/api/users/" + user.getId())
                     .header("Authorization", userToken(user.getId()))
@@ -151,20 +155,56 @@ class UserIntegrationTest {
                     .content(objectMapper.writeValueAsString(updateDto)))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.name", is("Updated")))
+            .andExpect(jsonPath("$.surname", is("User")))
+            .andExpect(jsonPath("$.email", is("updated300@gmail.com")))
+            .andExpect(jsonPath("$.birthDate", is("1990-01-01")))
             .andExpect(jsonPath("$.active", is(false)));
   }
 
   @Test
-  void deleteUser_softDelete_success() throws Exception {
-    User user = createTestUser(400L);
-    mockMvc.perform(delete("/api/users/" + user.getId())
+  void activateUser_success() throws Exception {
+    User user = createTestUser(500L);
+    user.setActive(false);
+    userRepository.save(user);
+    mockMvc.perform(patch("/api/users/" + user.getId() + "/activate")
                     .header("Authorization", userToken(user.getId())))
             .andExpect(status().isNoContent());
-    User deleted = userRepository.findById(user.getId())
-            .orElseThrow();
-    assertFalse(deleted.isActive());
+    User updated = userRepository.findById(user.getId()).orElseThrow();
+    assertTrue(updated.isActive());
+    mockMvc.perform(get("/api/users/" + user.getId())
+                    .header("Authorization", userToken(user.getId())))
+            .andExpect(status().isOk());
+  }
+
+  @Test
+  void deactivateUser_success() throws Exception {
+    User user = createTestUser(600L);
+    mockMvc.perform(patch("/api/users/" + user.getId() + "/deactivate")
+                    .header("Authorization", userToken(user.getId())))
+            .andExpect(status().isNoContent());
+    User updated = userRepository.findById(user.getId()).orElseThrow();
+    assertFalse(updated.isActive());
     mockMvc.perform(get("/api/users/" + user.getId())
                     .header("Authorization", userToken(user.getId())))
             .andExpect(status().isNotFound());
+  }
+
+  @Test
+  void deleteUser_hardDelete_success() throws Exception {
+    User user = createTestUser(400L);
+    mockMvc.perform(delete("/api/users/" + user.getId())
+                    .header("X-Saga-Delete", "true"))
+            .andExpect(status().isNoContent());
+    assertFalse(userRepository.findById(user.getId()).isPresent());
+    mockMvc.perform(get("/api/users/" + user.getId())
+                    .header("Authorization", userToken(user.getId())))
+            .andExpect(status().isNotFound());
+  }
+
+  @Test
+  void deleteUser_withoutSagaHeader_forbidden() throws Exception {
+    User user = createTestUser(401L);
+    mockMvc.perform(delete("/api/users/" + user.getId()))
+            .andExpect(status().isForbidden());
   }
 }

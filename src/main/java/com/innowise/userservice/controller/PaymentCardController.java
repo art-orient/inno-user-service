@@ -4,8 +4,6 @@ import com.innowise.userservice.dto.PaymentCardDto;
 import com.innowise.userservice.service.PaymentCardService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -17,67 +15,56 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("api/cards")
+@RequestMapping("/api/users/{userId}/cards")
 @RequiredArgsConstructor
 public class PaymentCardController {
 
   private final PaymentCardService cardService;
 
-  @PreAuthorize("hasRole('ADMIN') or #dto.userId == authentication.principal.userId")
+  @PreAuthorize("hasRole('ADMIN') or #dto.userId == authentication.principal")
   @PostMapping
-  public ResponseEntity<PaymentCardDto> create(@Valid @RequestBody PaymentCardDto dto) {
+  public ResponseEntity<PaymentCardDto> create(@PathVariable Long userId, @Valid @RequestBody PaymentCardDto dto) {
+    dto.setUserId(userId);
     PaymentCardDto created = cardService.create(dto);
     return ResponseEntity.status(HttpStatus.CREATED).body(created);
   }
 
-  @PreAuthorize("hasRole('ADMIN') or @cardSecurity.isOwner(#id)")
-  @GetMapping("/{id}")
-  public ResponseEntity<PaymentCardDto> getById(@PathVariable Long id) {
-    return ResponseEntity.ok(cardService.getById(id));
+  @PreAuthorize("hasRole('ADMIN') or @cardSecurity.isOwner(#userId, #cardId)")
+  @GetMapping("/{cardId}")
+  public ResponseEntity<PaymentCardDto> getById(@PathVariable Long userId, @PathVariable Long cardId) {
+    return ResponseEntity.ok(cardService.getById(cardId));
   }
 
-  @PreAuthorize("hasRole('ADMIN')")
-  @GetMapping
-  public ResponseEntity<Page<PaymentCardDto>> getAll(
-          @RequestParam(required = false) String name,
-          @RequestParam(required = false) String surname,
-          Pageable pageable) {
-    return ResponseEntity.ok(cardService.getAll(name, surname, pageable));
-  }
-
-  @PreAuthorize("hasRole('ADMIN') or #userId == authentication.principal.userId")
-  @GetMapping("/users/{userId}/payment-cards")
+  @PreAuthorize("hasRole('ADMIN') or #userId == authentication.principal")
+  @GetMapping("/list")
   public ResponseEntity<List<PaymentCardDto>> getByUserId(@PathVariable Long userId) {
     return ResponseEntity.ok(cardService.getByUserId(userId));
   }
 
-  @PreAuthorize("hasRole('ADMIN') or @cardSecurity.isOwner(#id)")
-  @PutMapping("/{id}")
-  public ResponseEntity<PaymentCardDto> update(
-          @PathVariable Long id,
-          @Valid @RequestBody PaymentCardDto dto) {
-    return ResponseEntity.ok(cardService.update(id, dto));
+  @PreAuthorize("hasRole('ADMIN') or @cardSecurity.isOwner(#userId, #cardId)")
+  @PutMapping("/{cardId}")
+  public ResponseEntity<PaymentCardDto> update(@PathVariable Long userId, @PathVariable Long cardId,
+                                               @Valid @RequestBody PaymentCardDto dto) {
+    return ResponseEntity.ok(cardService.update(cardId, dto));
   }
 
-  @PreAuthorize("hasRole('ADMIN') or @cardSecurity.isOwner(#id)")
-  @PatchMapping("/{id}/status")
-  public ResponseEntity<Void> activate(@PathVariable Long id) {
-    cardService.activate(id);
+  @PreAuthorize("hasRole('ADMIN') or @cardSecurity.isOwner(#userId, #cardId)")
+  @PatchMapping("/{cardId}/activate")
+  public ResponseEntity<Void> activate(@PathVariable Long userId, @PathVariable Long cardId) {
+    cardService.activate(cardId);
     return ResponseEntity.noContent().build();
   }
 
-  @PreAuthorize("hasRole('ADMIN') or @cardSecurity.isOwner(#id)")
-  @DeleteMapping("/{id}")
+  @PreAuthorize("hasRole('ADMIN') or @cardSecurity.isOwner(#userId, #cardId)")
+  @DeleteMapping("/{cardId}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  public ResponseEntity<Void> delete(@PathVariable Long id) {
-    cardService.delete(id);
-    return ResponseEntity.noContent().build();
+  public void delete(@PathVariable Long userId, @PathVariable Long cardId) {
+    cardService.delete(cardId);
   }
 }

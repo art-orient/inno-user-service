@@ -2,6 +2,7 @@ package com.innowise.userservice.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
 import lombok.Data;
 
@@ -24,6 +25,7 @@ public class UserDto implements Serializable {
   /**
    * Unique identifier of the user.
    */
+  @NotNull
   private Long id;
 
   /**

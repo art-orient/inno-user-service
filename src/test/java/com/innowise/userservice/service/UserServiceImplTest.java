@@ -23,12 +23,14 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceImplTest {
+
   @Mock
   private UserRepository userRepository;
   @Mock
   private UserMapper userMapper;
   @InjectMocks
   private UserServiceImpl userService;
+
   private User user;
   private UserDto userDto;
 
@@ -40,7 +42,6 @@ class UserServiceImplTest {
     user.setSurname("Artsikhovich");
     user.setEmail("orientirik@gmail.com");
     user.setActive(true);
-
     userDto = new UserDto();
     userDto.setId(1L);
     userDto.setName("Alex");
@@ -50,15 +51,34 @@ class UserServiceImplTest {
   }
 
   @Test
-  void create_success() {
+  void create_createsNewUserWhenNotExists() {
+    when(userRepository.findById(1L)).thenReturn(Optional.empty());
     when(userMapper.toEntity(userDto)).thenReturn(user);
     when(userRepository.save(user)).thenReturn(user);
     when(userMapper.toDto(user)).thenReturn(userDto);
     UserDto result = userService.create(userDto);
     assertNotNull(result);
+    assertTrue(user.isActive());
+    verify(userRepository).findById(1L);
     verify(userMapper).toEntity(userDto);
     verify(userRepository).save(user);
     verify(userMapper).toDto(user);
+  }
+
+  @Test
+  void create_throwsExceptionWhenUserAlreadyExists() {
+    when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+    assertThrows(UserServiceException.class, () -> userService.create(userDto));
+    verify(userRepository).findById(1L);
+    verify(userRepository, never()).save(any());
+  }
+
+  @Test
+  void create_throwsExceptionWhenIdIsNull() {
+    userDto.setId(null);
+    assertThrows(UserServiceException.class, () -> userService.create(userDto));
+    verify(userRepository, never()).findById(any());
+    verify(userRepository, never()).save(any());
   }
 
   @Test
@@ -67,7 +87,6 @@ class UserServiceImplTest {
     when(userMapper.toDto(user)).thenReturn(userDto);
     UserDto result = userService.getById(1L);
     assertNotNull(result);
-    assertEquals("Alex", result.getName());
     verify(userRepository).findUserWithCardsById(1L);
   }
 
@@ -110,17 +129,6 @@ class UserServiceImplTest {
     when(userMapper.toDto(user)).thenReturn(userDto);
     UserDto result = userService.update(1L, userDto);
     assertEquals("Alex", result.getName());
-    assertEquals("Artsikhovich", result.getSurname());
-    verify(userRepository).findById(1L);
-  }
-
-  @Test
-  void update_withBirthDate() {
-    userDto.setBirthDate(LocalDate.of(1990, 1, 1));
-    when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-    when(userMapper.toDto(user)).thenReturn(userDto);
-    UserDto result = userService.update(1L, userDto);
-    assertEquals(LocalDate.of(1990, 1, 1), user.getBirthDate());
     verify(userRepository).findById(1L);
   }
 
@@ -131,23 +139,17 @@ class UserServiceImplTest {
   }
 
   @Test
-  void delete_success() {
-    User existingUser = new User();
-    existingUser.setActive(true);
-    when(userRepository.findById(1L)).thenReturn(Optional.of(existingUser));
-    userService.delete(1L);
-    assertFalse(existingUser.isActive(), "User must be soft-deleted (active=false)");
-    verify(userRepository, never()).delete(any(User.class));
-  }
-
-  @Test
-  void delete_userNotFound() {
-    when(userRepository.findById(1L)).thenReturn(Optional.empty());
-    assertThrows(UserServiceException.class, () -> userService.delete(1L));
+  void update_updatesBirthDate() {
+    userDto.setBirthDate(LocalDate.of(1990, 1, 1));
+    when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+    when(userMapper.toDto(user)).thenReturn(userDto);
+    userService.update(1L, userDto);
+    assertEquals(LocalDate.of(1990, 1, 1), user.getBirthDate());
   }
 
   @Test
   void activate_success() {
+    user.setActive(false);
     when(userRepository.findById(1L)).thenReturn(Optional.of(user));
     userService.activate(1L);
     assertTrue(user.isActive());
@@ -160,18 +162,41 @@ class UserServiceImplTest {
   }
 
   @Test
+  void deactivate_success() {
+    user.setActive(true);
+    when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+    userService.deactivate(1L);
+    assertFalse(user.isActive());
+  }
+
+  @Test
+  void deactivate_userNotFound() {
+    when(userRepository.findById(1L)).thenReturn(Optional.empty());
+    assertThrows(UserServiceException.class, () -> userService.deactivate(1L));
+  }
+
+  @Test
+  void hardDelete_success() {
+    when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+    userService.hardDelete(1L);
+    verify(userRepository).delete(user);
+  }
+
+  @Test
+  void hardDelete_userNotFound() {
+    when(userRepository.findById(1L)).thenReturn(Optional.empty());
+    assertThrows(UserServiceException.class, () -> userService.hardDelete(1L));
+  }
+
+  @Test
   void exists_true() {
     when(userRepository.existsById(1L)).thenReturn(true);
-    boolean result = userService.exists(1L);
-    assertTrue(result);
-    verify(userRepository).existsById(1L);
+    assertTrue(userService.exists(1L));
   }
 
   @Test
   void exists_false() {
     when(userRepository.existsById(1L)).thenReturn(false);
-    boolean result = userService.exists(1L);
-    assertFalse(result);
-    verify(userRepository).existsById(1L);
+    assertFalse(userService.exists(1L));
   }
 }

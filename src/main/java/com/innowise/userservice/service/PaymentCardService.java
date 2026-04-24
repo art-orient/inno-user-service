@@ -1,7 +1,6 @@
 package com.innowise.userservice.service;
 
 import com.innowise.userservice.dto.PaymentCardDto;
-import com.innowise.userservice.entity.PaymentCard;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -34,9 +33,9 @@ public interface PaymentCardService {
   PaymentCardDto getById(Long id);
 
   /**
-   * Retrieves a paginated list of payment cards filtered by user name and surname.
+   * Retrieves a paginated list of payment cards filtered by username and surname.
    *
-   * @param name     optional filter by user name
+   * @param name     optional filter by username
    * @param surname  optional filter by user surname
    * @param pageable pagination and sorting information
    * @return a page of payment card DTOs matching the filters
@@ -61,20 +60,24 @@ public interface PaymentCardService {
   PaymentCardDto update(Long id, PaymentCardDto dto);
 
   /**
-   * Activates a payment card.
+   * Marks the specified payment card as active.
+   * <p>
+   * This operation performs a soft activation by setting {@code active = true}.
+   * The card remains in the database and retains all associated data.
    *
    * @param id the identifier of the payment card to activate
-   * @return the activated payment card entity
    */
-  PaymentCard activate(Long id);
+  void activate(Long id);
 
   /**
-   * Deletes a payment card by its identifier.
+   * Deactivates the specified payment card.
+   * <p>
+   * This operation performs a soft delete by setting {@code active = false}.
+   * The card is not removed from the database and can be reactivated later.
    *
-   * @param id the identifier of the payment card to delete
-   * @return the deleted payment card entity
+   * @param id the identifier of the payment card to deactivate
    */
-  PaymentCard delete(Long id);
+  void delete(Long id);
 
   /**
    * Retrieves the identifier of the user who owns the specified payment card.
